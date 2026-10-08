@@ -1,0 +1,51 @@
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kitchen
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kitchen_local}
+      POSTGRES_DB: kitchen
+    ports: ['127.0.0.1:5432:5432']
+    volumes: ['postgres-data:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kitchen -d kitchen']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  migrate:
+    build: { context: ., target: server }
+    command: ['sh', '-c', 'npm run db:migrate && npm run db:seed']
+    environment:
+      DATABASE_URL: postgres://kitchen:${POSTGRES_PASSWORD:-kitchen_local}@database:5432/kitchen
+    depends_on:
+      database: { condition: service_healthy }
+  server:
+    build: { context: ., target: server }
+    ports: ['2567:2567']
+    environment:
+      PORT: 2567
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:2567/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  client:
+    build: { context: ., target: client }
+    ports: ['8080:80']
+    depends_on:
+      server: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost/']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+volumes:
+  postgres-data:
