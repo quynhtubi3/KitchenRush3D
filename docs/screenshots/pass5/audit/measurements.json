@@ -1,0 +1,2390 @@
+{
+  "environment": "Chromium SwiftShader; sequential paused scenes; rolling frame window can include prior profile and loading; NOT mobile GPU benchmark",
+  "rows": [
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "low",
+      "menuLoadMs": 1704,
+      "entryMs": 3759,
+      "frameSample": {
+        "mean": 211.57083333730694,
+        "p95": 500,
+        "p99": 683.3000000000011,
+        "fps": 4.726549421893623,
+        "frames": 24
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.90298233050082,
+        "frameMs": 295.5,
+        "frameMean": 208.3305084503303,
+        "frameP95": 617.7999877929688,
+        "frameP99": 711.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 199,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 3,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 10350596,
+        "shadowCasters": 111,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "standard",
+      "menuLoadMs": 1704,
+      "entryMs": 3759,
+      "frameSample": {
+        "mean": 304.0882353025325,
+        "p95": 333.40000000000146,
+        "p99": 333.40000000000146,
+        "fps": 3.288519199057853,
+        "frames": 17
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 3.315649867374004,
+        "frameMs": 175.20000004768372,
+        "frameMean": 249.9972722010179,
+        "frameP95": 631.0999755859375,
+        "frameP99": 711.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 310,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 3,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "high",
+      "menuLoadMs": 1704,
+      "entryMs": 3759,
+      "frameSample": {
+        "mean": 275.0421052681773,
+        "p95": 466.70000000000437,
+        "p99": 466.70000000000437,
+        "fps": 3.635806957720016,
+        "frames": 19
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.365147190984627,
+        "frameMs": 450.30000019073486,
+        "frameMean": 310.8796041670598,
+        "frameP95": 876.5999755859375,
+        "frameP99": 1422,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 310,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 2,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "low",
+      "menuLoadMs": 1704,
+      "entryMs": 1927,
+      "frameSample": {
+        "mean": 278.42777777777764,
+        "p95": 466.6999999999971,
+        "p99": 466.6999999999971,
+        "fps": 3.5915956661412314,
+        "frames": 18
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.554408909809388,
+        "frameMs": 444.5,
+        "frameMean": 352.415120866822,
+        "frameP95": 938.5999755859375,
+        "frameP99": 1382,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 178,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 3,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "standard",
+      "menuLoadMs": 1704,
+      "entryMs": 1927,
+      "frameSample": {
+        "mean": 219.57916667064032,
+        "p95": 316.59999999999127,
+        "p99": 550,
+        "fps": 4.554166113126564,
+        "frames": 24
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 4.511006856827444,
+        "frameMs": 803.0999999046326,
+        "frameMean": 359.3787491738796,
+        "frameP95": 929.0999755859375,
+        "frameP99": 1382,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 5,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "high",
+      "menuLoadMs": 1704,
+      "entryMs": 1927,
+      "frameSample": {
+        "mean": 301.37777778307566,
+        "p95": 466.6000000000058,
+        "p99": 466.6000000000058,
+        "fps": 3.3180946762431023,
+        "frames": 18
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.799499822685882,
+        "frameMs": 429.7000000476837,
+        "frameMean": 394.81916584968565,
+        "frameP95": 906.0999755859375,
+        "frameP99": 1376.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 3,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "low",
+      "menuLoadMs": 1704,
+      "entryMs": 2142,
+      "frameSample": {
+        "mean": 378.5000000068124,
+        "p95": 1049.1000000953645,
+        "p99": 1049.1000000953645,
+        "fps": 2.642007925976226,
+        "frames": 14
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.5858056508047667,
+        "frameMs": 449.30000019073486,
+        "frameMean": 425.7083332002163,
+        "frameP95": 938.5999755859375,
+        "frameP99": 1376.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 183,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 3,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "standard",
+      "menuLoadMs": 1704,
+      "entryMs": 2142,
+      "frameSample": {
+        "mean": 274.03684210526376,
+        "p95": 650.1000000000058,
+        "p99": 650.1000000000058,
+        "fps": 3.649144371674949,
+        "frames": 19
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 3.726708074534154,
+        "frameMs": 289.2999999523163,
+        "frameMean": 392.55000027219455,
+        "frameP95": 887.2999877929688,
+        "frameP99": 1261.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 4,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "high",
+      "menuLoadMs": 1704,
+      "entryMs": 2142,
+      "frameSample": {
+        "mean": 325.7875000119202,
+        "p95": 500,
+        "p99": 500,
+        "fps": 3.0694854773845255,
+        "frames": 16
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.3508945153806624,
+        "frameMs": 456.89999985694885,
+        "frameMean": 396.31541693409287,
+        "frameP95": 907.7000122070312,
+        "frameP99": 1069.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 2,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "low",
+      "menuLoadMs": 1704,
+      "entryMs": 2855,
+      "frameSample": {
+        "mean": 492.1818181948223,
+        "p95": 833.2000000000116,
+        "p99": 833.2000000000116,
+        "fps": 2.0317694864627565,
+        "frames": 11
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.1591121730892495,
+        "frameMs": 29.59999990463257,
+        "frameMean": 441.4991668681304,
+        "frameP95": 947,
+        "frameP99": 1329.5,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 177,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 2,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "standard",
+      "menuLoadMs": 1704,
+      "entryMs": 2855,
+      "frameSample": {
+        "mean": 265.6500000023836,
+        "p95": 383.29999999998836,
+        "p99": 383.29999999998836,
+        "fps": 3.764351590404771,
+        "frames": 20
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 2.8421740737009378,
+        "frameMs": 374.40000009536743,
+        "frameMean": 427.1237500488758,
+        "frameP95": 950.7999877929688,
+        "frameP99": 1329.5,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 3,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "high",
+      "menuLoadMs": 1704,
+      "entryMs": 2855,
+      "frameSample": {
+        "mean": 335.32500001192057,
+        "p95": 933.3000000000175,
+        "p99": 933.3000000000175,
+        "fps": 2.982181465636176,
+        "frames": 16
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.213303429168137,
+        "frameMs": 405.7999999523163,
+        "frameMean": 429.19541613459586,
+        "frameP95": 991.7000122070312,
+        "frameP99": 1349.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 2,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "low",
+      "menuLoadMs": 1704,
+      "entryMs": 2912,
+      "frameSample": {
+        "mean": 396.49230770698006,
+        "p95": 816.6000000000058,
+        "p99": 816.6000000000058,
+        "fps": 2.522117026136685,
+        "frames": 13
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.1884870988837757,
+        "frameMs": 546.5,
+        "frameMean": 464.1970821857452,
+        "frameP95": 1000.5,
+        "frameP99": 1362.699951171875,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 186,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 2,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "standard",
+      "menuLoadMs": 1704,
+      "entryMs": 2912,
+      "frameSample": {
+        "mean": 212.78800000763033,
+        "p95": 333.4000000000233,
+        "p99": 349.9000000000233,
+        "fps": 4.699513130271168,
+        "frames": 25
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 4.105820685097814,
+        "frameMs": 64.20000004768372,
+        "frameMean": 435.23624860843023,
+        "frameP95": 999.4000244140625,
+        "frameP99": 1349.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 4,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000,
+        "dpr": 1
+      },
+      "quality": "high",
+      "menuLoadMs": 1704,
+      "entryMs": 2912,
+      "frameSample": {
+        "mean": 276.9789473784591,
+        "p95": 533.3000000000466,
+        "p99": 533.3000000000466,
+        "fps": 3.6103827004354154,
+        "frames": 19
+      },
+      "resolution": {
+        "css": [1440, 1000],
+        "buffer": [1440, 1000],
+        "dpr": 1,
+        "hardwareScalingLevel": 1,
+        "effectiveScale": 1,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.400441681260195,
+        "frameMs": 347.5,
+        "frameMean": 432.32333183288574,
+        "frameP95": 988.9000244140625,
+        "frameP99": 1139.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 2,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2233,
+      "entryMs": 3522,
+      "frameSample": {
+        "mean": 175.75517241872586,
+        "p95": 283.2999999999993,
+        "p99": 283.3000000000002,
+        "fps": 5.6897329747858665,
+        "frames": 29
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [585, 795],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 5.516125473322349,
+        "frameMs": 175.60000014305115,
+        "frameMean": 138.84666595458984,
+        "frameP95": 364.5,
+        "frameP99": 552.7000122070312,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 199,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 6,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 10350596,
+        "shadowCasters": 111,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2233,
+      "entryMs": 3522,
+      "frameSample": {
+        "mean": 235.5590909112583,
+        "p95": 433.2999999999993,
+        "p99": 583.2999999999993,
+        "fps": 4.245219304130903,
+        "frames": 22
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [780, 1060],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 4.134452391835049,
+        "frameMs": 395.2000000476837,
+        "frameMean": 187.60764674018412,
+        "frameP95": 525.2000122070312,
+        "frameP99": 934.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 310,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 4,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2233,
+      "entryMs": 3522,
+      "frameSample": {
+        "mean": 552.3900000000001,
+        "p95": 749.9000000000015,
+        "p99": 749.9000000000015,
+        "fps": 1.810315175872119,
+        "frames": 10
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [1170, 1590],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.7605753039054455,
+        "frameMs": 743.5,
+        "frameMean": 239.55231444040933,
+        "frameP95": 743.5,
+        "frameP99": 1203.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 199,
+        "drawCalls": 310,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 3,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2233,
+      "entryMs": 2961,
+      "frameSample": {
+        "mean": 919.983333325387,
+        "p95": 1333.4000000000087,
+        "p99": 1333.4000000000087,
+        "fps": 1.0869762133465868,
+        "frames": 6
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [585, 795],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.6520551566104908,
+        "frameMs": 667.4000000953674,
+        "frameMean": 341.26250057617824,
+        "frameP95": 1203.0999755859375,
+        "frameP99": 1630.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 178,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 2,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2233,
+      "entryMs": 2961,
+      "frameSample": {
+        "mean": 228.38181818181792,
+        "p95": 450,
+        "p99": 466.6000000000058,
+        "fps": 4.3786322745004425,
+        "frames": 22
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [780, 1060],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.718315765448536,
+        "frameMs": 330.2999999523163,
+        "frameMean": 355.17583355704943,
+        "frameP95": 1220.4000244140625,
+        "frameP99": 1883.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 6,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2233,
+      "entryMs": 2961,
+      "frameSample": {
+        "mean": 415.71538461538483,
+        "p95": 650,
+        "p99": 650,
+        "fps": 2.4054919230982725,
+        "frames": 13
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [1170, 1590],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 3.195773057470142,
+        "frameMs": 299.80000019073486,
+        "frameMean": 372.2550000727177,
+        "frameP95": 1220.4000244140625,
+        "frameP99": 1883.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 3,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2233,
+      "entryMs": 4144,
+      "frameSample": {
+        "mean": 585.6333333439284,
+        "p95": 1033.3999999999942,
+        "p99": 1033.3999999999942,
+        "fps": 1.707553076410567,
+        "frames": 9
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [585, 795],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.674181883115327,
+        "frameMs": 1056.4000000953674,
+        "frameMean": 436.7879169126352,
+        "frameP95": 1320.300048828125,
+        "frameP99": 1928,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 183,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 2,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2233,
+      "entryMs": 4144,
+      "frameSample": {
+        "mean": 218.8041666666662,
+        "p95": 333.30000000001746,
+        "p99": 550,
+        "fps": 4.5702968788681,
+        "frames": 24
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [780, 1060],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.700279313841299,
+        "frameMs": 310.09999990463257,
+        "frameMean": 388.7691664814949,
+        "frameP95": 1260.4000244140625,
+        "frameP99": 1883.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 6,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2233,
+      "entryMs": 4144,
+      "frameSample": {
+        "mean": 417.39166666269256,
+        "p95": 566.7000000000116,
+        "p99": 566.7000000000116,
+        "fps": 2.3958312536415147,
+        "frames": 12
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [1170, 1590],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 3.042966689599096,
+        "frameMs": 316.2000000476837,
+        "frameMean": 322.92541590929034,
+        "frameP95": 959.5999755859375,
+        "frameP99": 1686,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 3,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2233,
+      "entryMs": 4013,
+      "frameSample": {
+        "mean": 636.250000005959,
+        "p95": 1183.2000000000116,
+        "p99": 1183.2000000000116,
+        "fps": 1.5717092337770282,
+        "frames": 8
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [585, 795],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.9046167911246918,
+        "frameMs": 656.6999998092651,
+        "frameMean": 394.0945826351643,
+        "frameP95": 1110.4000244140625,
+        "frameP99": 1713,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 177,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 2,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2233,
+      "entryMs": 4013,
+      "frameSample": {
+        "mean": 329.49374999702013,
+        "p95": 500,
+        "p99": 500,
+        "fps": 3.0349589332393823,
+        "frames": 16
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [780, 1060],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 4.540020278855511,
+        "frameMs": 360.2999999523163,
+        "frameMean": 377.8604165772597,
+        "frameP95": 1164.5999755859375,
+        "frameP99": 1713,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 5,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2233,
+      "entryMs": 4013,
+      "frameSample": {
+        "mean": 493.0272727272717,
+        "p95": 450.0999999999767,
+        "p99": 450.0999999999767,
+        "fps": 2.028285361311383,
+        "frames": 11
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [1170, 1590],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 2.796003578909425,
+        "frameMs": 430.39999985694885,
+        "frameMean": 343.1674989183744,
+        "frameP95": 1105.300048828125,
+        "frameP99": 1713,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 3,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2233,
+      "entryMs": 4625,
+      "frameSample": {
+        "mean": 515.8727272727278,
+        "p95": 666.5999999999767,
+        "p99": 666.5999999999767,
+        "fps": 1.9384626229161506,
+        "frames": 11
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [585, 795],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.665796750599034,
+        "frameMs": 32.299999952316284,
+        "frameMean": 442.61500079433125,
+        "frameP95": 1378.800048828125,
+        "frameP99": 1867.800048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 186,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 2,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2233,
+      "entryMs": 4625,
+      "frameSample": {
+        "mean": 240.7285714285709,
+        "p95": 616.6000000000349,
+        "p99": 616.6000000000349,
+        "fps": 4.154056139101546,
+        "frames": 21
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [780, 1060],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.56111667232606,
+        "frameMs": 300.09999990463257,
+        "frameMean": 397.78250039021174,
+        "frameP95": 1283,
+        "frameP99": 1791.9000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 6,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "portrait",
+        "width": 390,
+        "height": 844,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2233,
+      "entryMs": 4625,
+      "frameSample": {
+        "mean": 333.71999999999923,
+        "p95": 616.5999999999767,
+        "p99": 616.5999999999767,
+        "fps": 2.9965240321227444,
+        "frames": 15
+      },
+      "resolution": {
+        "css": [390, 530],
+        "buffer": [1170, 1590],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 3.635350144829105,
+        "frameMs": 247.09999990463257,
+        "frameMean": 349.4479172150294,
+        "frameP95": 1133.5,
+        "frameP99": 1791.9000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.1
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 4,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 53500000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2485,
+      "entryMs": 1334,
+      "frameSample": {
+        "mean": 120.90238095238094,
+        "p95": 166.79999999999927,
+        "p99": 383.3000000000011,
+        "fps": 8.271135705705115,
+        "frames": 42
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1266, 444],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 9.754511461550965,
+        "frameMs": 130.90000009536743,
+        "frameMean": 136.1329897752742,
+        "frameP95": 470.70001220703125,
+        "frameP99": 764.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 198,
+        "drawCalls": 198,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 10,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 10350596,
+        "shadowCasters": 111,
+        "quality": "low"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2485,
+      "entryMs": 1334,
+      "frameSample": {
+        "mean": 176.13103448440285,
+        "p95": 483.3000000000029,
+        "p99": 516.7000000000007,
+        "fps": 5.677591135073667,
+        "frames": 29
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1688, 592],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.744815304292885,
+        "frameMs": 315.7999999523163,
+        "frameMean": 152.27151166006576,
+        "frameP95": 470.70001220703125,
+        "frameP99": 764.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 198,
+        "drawCalls": 309,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 6,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "standard"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "little-sun",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2485,
+      "entryMs": 1334,
+      "frameSample": {
+        "mean": 241.78636364286584,
+        "p95": 466.6999999999971,
+        "p99": 516.7000000000044,
+        "fps": 4.135882540824614,
+        "frames": 22
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [2532, 888],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 4.264937945210723,
+        "frameMs": 461.40000009536743,
+        "frameMean": 194.40526303910372,
+        "frameP95": 625.7000122070312,
+        "frameP99": 956.0999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 237,
+        "activeMeshes": 198,
+        "drawCalls": 309,
+        "materials": 129,
+        "uniqueGeometries": 237,
+        "fps": 4,
+        "triangles": 107044,
+        "geometryBytesEstimated": 3501264,
+        "textureBytesEstimated": 11135062,
+        "shadowCasters": 111,
+        "quality": "high"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2485,
+      "entryMs": 3503,
+      "frameSample": {
+        "mean": 170.490000003179,
+        "p95": 466.6000000000058,
+        "p99": 466.70000000001164,
+        "fps": 5.865446653653315,
+        "frames": 30
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1266, 444],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 4.6474160366492665,
+        "frameMs": 129.90000009536743,
+        "frameMean": 286.7387491464615,
+        "frameP95": 948.2000122070312,
+        "frameP99": 1435.199951171875,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 178,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 5,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "low"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2485,
+      "entryMs": 3503,
+      "frameSample": {
+        "mean": 241.67619047619033,
+        "p95": 416.59999999999127,
+        "p99": 416.59999999999127,
+        "fps": 4.137767969735186,
+        "frames": 21
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1688, 592],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 6.6305669134710765,
+        "frameMs": 301.2999999523163,
+        "frameMean": 287.10624916553496,
+        "frameP95": 948.2000122070312,
+        "frameP99": 1435.199951171875,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 7,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "standard"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "tide",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2485,
+      "entryMs": 3503,
+      "frameSample": {
+        "mean": 228.02608695444866,
+        "p95": 500,
+        "p99": 533.1999999999971,
+        "fps": 4.385463143082237,
+        "frames": 23
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [2532, 888],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 4.681063537670573,
+        "frameMs": 435.2999999523163,
+        "frameMean": 310.92999877929685,
+        "frameP95": 948.2000122070312,
+        "frameP99": 1435.199951171875,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 216,
+        "activeMeshes": 178,
+        "drawCalls": 273,
+        "materials": 144,
+        "uniqueGeometries": 216,
+        "fps": 5,
+        "triangles": 91750,
+        "geometryBytesEstimated": 3064808,
+        "textureBytesEstimated": 10198060,
+        "shadowCasters": 94,
+        "quality": "high"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2485,
+      "entryMs": 2559,
+      "frameSample": {
+        "mean": 218.89999999792653,
+        "p95": 500,
+        "p99": 666.6999999999825,
+        "fps": 4.56829602562573,
+        "frames": 23
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1266, 444],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.9131188939563792,
+        "frameMs": 504.7000000476837,
+        "frameMean": 347.14249956210455,
+        "frameP95": 1028.199951171875,
+        "frameP99": 1566.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 183,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 2,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2485,
+      "entryMs": 2559,
+      "frameSample": {
+        "mean": 182.93571428911986,
+        "p95": 316.69999999998254,
+        "p99": 316.70000000001164,
+        "fps": 5.466401155651623,
+        "frames": 28
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1688, 592],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.523742888278023,
+        "frameMs": 266,
+        "frameMean": 284.696666653951,
+        "frameP95": 998.5999755859375,
+        "frameP99": 1443.300048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 6,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "olive",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2485,
+      "entryMs": 2559,
+      "frameSample": {
+        "mean": 203.28461538644981,
+        "p95": 450,
+        "p99": 533.2000000000116,
+        "fps": 4.919211412526087,
+        "frames": 26
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [2532, 888],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 4.515827977092006,
+        "frameMs": 533.3999998569489,
+        "frameMean": 310.52416678667066,
+        "frameP95": 1014.5999755859375,
+        "frameP99": 1456.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 221,
+        "activeMeshes": 183,
+        "drawCalls": 283,
+        "materials": 167,
+        "uniqueGeometries": 221,
+        "fps": 5,
+        "triangles": 103586,
+        "geometryBytesEstimated": 3380984,
+        "textureBytesEstimated": 10546712,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2485,
+      "entryMs": 1894,
+      "frameSample": {
+        "mean": 319.2562500089407,
+        "p95": 900,
+        "p99": 900,
+        "fps": 3.1322801040605945,
+        "frames": 16
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1266, 444],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 2.204488338233519,
+        "frameMs": 910,
+        "frameMean": 362.18583382368087,
+        "frameP95": 1316.199951171875,
+        "frameP99": 1566.5999755859375,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 177,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 2,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "low"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2485,
+      "entryMs": 1894,
+      "frameSample": {
+        "mean": 179.26896551888584,
+        "p95": 283.30000000001746,
+        "p99": 500,
+        "fps": 5.578210356184885,
+        "frames": 29
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1688, 592],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.634861006761838,
+        "frameMs": 261,
+        "frameMean": 275.24166684150697,
+        "frameP95": 974,
+        "frameP99": 1404.300048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 6,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "standard"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "lantern",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2485,
+      "entryMs": 1894,
+      "frameSample": {
+        "mean": 201.04400000381517,
+        "p95": 500,
+        "p99": 516.6000000000058,
+        "fps": 4.974035534415467,
+        "frames": 25
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [2532, 888],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 4.65282193647009,
+        "frameMs": 258.2999999523163,
+        "frameMean": 296.9695839683215,
+        "frameP95": 974,
+        "frameP99": 1404.300048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 215,
+        "activeMeshes": 177,
+        "drawCalls": 274,
+        "materials": 183,
+        "uniqueGeometries": 215,
+        "fps": 5,
+        "triangles": 96226,
+        "geometryBytesEstimated": 3187704,
+        "textureBytesEstimated": 10895364,
+        "shadowCasters": 96,
+        "quality": "high"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "low",
+      "menuLoadMs": 2485,
+      "entryMs": 2087,
+      "frameSample": {
+        "mean": 334.51999999682107,
+        "p95": 566.6000000000058,
+        "p99": 566.6000000000058,
+        "fps": 2.9893578859545107,
+        "frames": 15
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1266, 444],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.6666666666666666,
+        "effectiveScale": 1.5,
+        "profile": "low",
+        "sharpness": "auto",
+        "fps": 1.9926140439248512,
+        "frameMs": 461.10000014305115,
+        "frameMean": 360.1550013701121,
+        "frameP95": 1297.5,
+        "frameP99": 1937.4000244140625,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 186,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 2,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "low"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "standard",
+      "menuLoadMs": 2485,
+      "entryMs": 2087,
+      "frameSample": {
+        "mean": 185.43214285884667,
+        "p95": 516.6000000000058,
+        "p99": 533.2999999999884,
+        "fps": 5.392808304875238,
+        "frames": 28
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [1688, 592],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.5,
+        "effectiveScale": 2,
+        "profile": "balanced",
+        "sharpness": "auto",
+        "fps": 5.287927660971831,
+        "frameMs": 249.5,
+        "frameMean": 276.35500085552536,
+        "frameP95": 956.9000244140625,
+        "frameP99": 1873.300048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 5,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "standard"
+      },
+      "heap": 56800000
+    },
+    {
+      "restaurant": "orbit",
+      "viewport": {
+        "name": "landscape",
+        "width": 844,
+        "height": 390,
+        "dpr": 3
+      },
+      "quality": "high",
+      "menuLoadMs": 2485,
+      "entryMs": 2087,
+      "frameSample": {
+        "mean": 238.81904761677808,
+        "p95": 516.7000000000116,
+        "p99": 516.7000000000116,
+        "fps": 4.187270697120667,
+        "frames": 21
+      },
+      "resolution": {
+        "css": [844, 296],
+        "buffer": [2532, 888],
+        "dpr": 3,
+        "hardwareScalingLevel": 0.3333333333333333,
+        "effectiveScale": 3,
+        "profile": "high",
+        "sharpness": "auto",
+        "fps": 4.320214282687757,
+        "frameMs": 437.2999999523163,
+        "frameMean": 309.3795840481917,
+        "frameP95": 1005.4000244140625,
+        "frameP99": 1873.300048828125,
+        "renderer": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        },
+        "zoom": 1.04
+      },
+      "render": {
+        "meshes": 224,
+        "activeMeshes": 186,
+        "drawCalls": 286,
+        "materials": 206,
+        "uniqueGeometries": 224,
+        "fps": 4,
+        "triangles": 97522,
+        "geometryBytesEstimated": 3189272,
+        "textureBytesEstimated": 11244016,
+        "shadowCasters": 99,
+        "quality": "high"
+      },
+      "heap": 56800000
+    }
+  ]
+}

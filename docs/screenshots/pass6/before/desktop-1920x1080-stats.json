@@ -1,0 +1,169 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "canvas": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080,
+    "cssHeight": "1080px",
+    "cssTop": "0px",
+    "cssBottom": "0px"
+  },
+  "hud": {
+    "x": 30,
+    "y": 95,
+    "width": 1860,
+    "height": 83
+  },
+  "orders": {
+    "x": 30,
+    "y": 191,
+    "width": 384.34375,
+    "height": 80
+  },
+  "hand": {
+    "x": 30,
+    "y": 992,
+    "width": 1860,
+    "height": 68
+  },
+  "joystick": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+  },
+  "interact": {
+    "x": 0,
+    "y": 0,
+    "width": 0,
+    "height": 0
+  },
+  "camera": {
+    "profile": "desktop-overview",
+    "orthoWidth": 25.24,
+    "orthoHeight": 14.2,
+    "zoom": 1,
+    "targetX": 0,
+    "targetZ": -0.6,
+    "targetBoundX": 0.75,
+    "targetBoundZ": 0.6,
+    "chefHeightPx": 122,
+    "chefX": 0,
+    "chefZ": 3,
+    "stationsInFrame": 12,
+    "edgeMarkers": 0,
+    "stageBoundsPx": {
+      "x": 390,
+      "y": 194,
+      "width": 1141,
+      "height": 777
+    },
+    "stageCanvasAreaPercent": 42.7,
+    "stationLabelsVisible": 12,
+    "stationLabelsOverlapPairs": 0,
+    "stationLabelsHiddenForOverlap": 0
+  },
+  "gameplayOcclusionPercent": 26.9,
+  "stationLabels": [
+    {
+      "id": "meat",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1319,
+      "y": 217
+    },
+    {
+      "id": "stove",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1147,
+      "y": 217
+    },
+    {
+      "id": "lettuce",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 994,
+      "y": 217
+    },
+    {
+      "id": "board",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 860,
+      "y": 217
+    },
+    {
+      "id": "bun",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 699,
+      "y": 217
+    },
+    {
+      "id": "rack",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1381,
+      "y": 418
+    },
+    {
+      "id": "sink",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1384,
+      "y": 570
+    },
+    {
+      "id": "trash",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1377,
+      "y": 711
+    },
+    {
+      "id": "assembly",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 1001,
+      "y": 499
+    },
+    {
+      "id": "counter",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 832,
+      "y": 499
+    },
+    {
+      "id": "seat1",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 539,
+      "y": 418
+    },
+    {
+      "id": "seat2",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 547,
+      "y": 629
+    }
+  ]
+}

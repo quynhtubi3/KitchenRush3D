@@ -1,8 +1,10 @@
 # Kitchen Rush 3D
 
-Game nấu ăn 3D bằng TypeScript, Babylon.js, Vite và Colyseus. **Bản 0.3: 5 nhà hàng, 50 màn, Solo và co-op 2–4 người.** Mô phỏng gameplay chạy trên Node.js; trình duyệt chỉ gửi ý định di chuyển/tương tác. Trạng thái kiểm chứng nằm ở [PROGRESS.md](docs/PROGRESS.md).
+Game nấu ăn 3D bằng TypeScript, Babylon.js, Vite và Colyseus. **Bản 0.4 ưu tiên Guest:** campaign 5 nhà hàng/50 màn, Solo/co-op 2–4 người, Settings và điều khiển cảm ứng. Mô phỏng gameplay chạy trên Node.js; trình duyệt chỉ gửi ý định di chuyển/tương tác. Account/Database/Economy/Social tạm hoãn, giữ lại mã đã xây dựng. Trạng thái kiểm chứng nằm ở [PROGRESS.md](docs/PROGRESS.md).
 
 ![Hai đầu bếp chơi cùng một trận](docs/screenshots/multiplayer-gameplay.png)
+
+Guest 4.3 **3D Pass 1** bổ sung chef/khách có khớp chuyển động, thiết bị bo cạnh, đồ ăn theo từng cuisine và kiến trúc riêng cho cả năm nhà hàng. Xem [gallery desktop/mobile, asset pipeline và hạn chế Pass 2](docs/VISUAL_PASS_1.md). Đây là vòng mỹ thuật đầu tiên; kiểm thử đạt không đồng nghĩa chất lượng đồ họa đã hoàn thiện.
 
 ## Chạy local
 
@@ -15,7 +17,13 @@ npm run dev
 
 Trên Windows PowerShell nếu ExecutionPolicy chặn `npm.ps1`, dùng `npm.cmd` và `npx.cmd` thay cho `npm`/`npx`.
 
-Mở **http://localhost:5173**. Server ở http://localhost:2567; health check: `/health`. Solo và co-op đều cần server local. Không cần PostgreSQL để chơi bản hiện tại.
+Mở **http://localhost:5173**. Server ở http://localhost:2567; health check: `/health`. Solo và co-op đều cần server local. Hiện ưu tiên Guest, tạm hoãn Account/Economy/Social. Không có `DATABASE_URL` thì game chạy Guest lưu cục bộ. Để chủ động bật Guest kể cả khi môi trường có DB URL: PowerShell `$env:GUEST_ONLY='true'; npm.cmd run dev`. Account và tiến trình đồng bộ vẫn chưa nghiệm thu PostgreSQL.
+
+Nút **Cài đặt** mở Master/Music/SFX Volume, Mute, đồ họa nhẹ và giảm chuyển động. Cài đặt lưu trên thiết bị; mở bảng không dừng trận. Bật âm thanh để nghe nhạc tổng hợp riêng của menu/5 nhà hàng; âm thanh không tự phát trước tương tác. Chế độ nhẹ tắt bóng đổ, giảm độ phân giải render; lựa chọn này không đổi độ khó hoặc trạng thái server.
+
+Trên điện thoại, chọn **Cài đặt → Điều khiển cảm ứng → Joystick + nút tương tác**. Kéo cần theo tám hướng; thả tay để dừng tại tâm ô đang tới. Nút bên phải hiện trạm gần nhất và gửi một thao tác mỗi lần nhấn; viền trạm cho biết mục tiêu. Có thể tiếp tục chạm trạm hoặc đổi về **Chạm để di chuyển**. Dọc/ngang có vùng điều khiển riêng và safe-area. Lệnh vẫn đi qua đường đi theo ô của server, không đổi tốc độ hoặc cân bằng.
+
+Vé khách/hàng chờ có cảnh báo **Sắp bỏ đi**; trạm hiện **Sắp cháy** hoặc trạng thái hoàn tất. Cảnh báo dựa trên snapshot và thời gian của từng màn. Chữ/màu vẫn hoạt động khi mute hoặc giảm chuyển động; SFX dùng âm lượng đã chọn.
 
 ## Chơi Multiplayer
 
@@ -45,7 +53,7 @@ Tutorial theo ngữ cảnh ở các ca đầu có nút ẩn, không tạm dừng
 
 1. Chọn **Vào bếp**. Nhấp/chạm sàn để di chuyển; nhấp vật thể hoặc nhãn trạm để tự đi tới và làm **một** thao tác.
 2. Lấy **Đĩa sạch** → **Bày món**.
-3. **Thịt** → **Bếp nướng**. Thịt chín sau 7 giây, cháy nếu để thêm 14 giây.
+3. **Thịt** → **Bếp nướng**. Thịt chín sau 7 giây; campaign hiện cho 45 giây sau khi chín trước khi cháy. Cảnh báo xuất hiện trong 5 giây cuối.
 4. Trong lúc nấu, **Rau xà lách** → **Thớt** → nhấp thớt 3 lần → nhấp lần nữa để lấy → **Bày món**.
 5. Tay trống: lấy thịt chín từ bếp → **Bày món**. Lấy **Bánh mì** → **Bày món**.
 6. Tay trống: lấy burger từ bàn bày món → đúng khách đang chờ. Khách ăn rồi để lại đĩa bẩn.
@@ -82,7 +90,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-`DATABASE_URL` nhận qua biến môi trường; giá trị mặc định chỉ dùng local. Migration SQL có phiên bản, transaction và advisory lock. Schema hiện là nền tảng cho giai đoạn persistence, chưa kết nối với luồng kết quả Solo. Không có Docker trong môi trường xây dựng ban đầu, nên không coi Compose/PostgreSQL đã được chạy kiểm chứng.
+`DATABASE_URL` nhận qua biến môi trường; giá trị mặc định chỉ dùng local cho migration/seed. Migration SQL có phiên bản, transaction và advisory lock. Migration 002 thêm account, session, guest identity, tiến trình và liên kết match; khi server có `DATABASE_URL`, kết quả do simulation tạo được lưu theo từng người chơi. Nếu chưa cấu hình database, game giữ chế độ Guest cục bộ. PostgreSQL/Docker chưa được chạy kiểm chứng trong lần triển khai hiện tại; xem [PROGRESS.md](docs/PROGRESS.md).
 
 ## Cấu trúc
 
@@ -100,4 +108,4 @@ npm run db:seed
 
 Chi tiết: [Kiến trúc](docs/ARCHITECTURE.md), [Gameplay](docs/GAME_DESIGN.md), [Content](docs/CONTENT_SCHEMA.md), [Assets](docs/ASSET_MANIFEST.md), [Test](docs/TEST_PLAN.md), [Triển khai](docs/DEPLOYMENT.md), [Tiến độ](docs/PROGRESS.md).
 
-Giai đoạn 4–5 còn lại: tài khoản, giao dịch xu, shop, bạn bè, leaderboard và hoàn thiện production. Không có nút giả cho những hệ thống này. Docker/PostgreSQL chưa được chạy kiểm chứng trên máy hiện tại.
+Nhánh Guest tiếp tục với gameplay feedback, hiệu ứng, animation và tối ưu mobile. Account/Database/Economy/Social đã được tạm hoãn theo yêu cầu; mã database-backed chưa nghiệm thu và không cần cho Guest. Docker/PostgreSQL chưa được chạy kiểm chứng trên máy hiện tại.

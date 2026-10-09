@@ -64,6 +64,10 @@ export function playLevel(id: string, size: number) {
   while (!g.canWin() && g.state.phase === 'playing') {
     while (clean(g)) {}
     tick(g, () => g.state.customers.some((c) => c.state === 'WaitingForFood'));
+    if (!Object.values(g.state.chefs).some((c) => c.item || c.target)) {
+      const burnt = g.state.stations.find((s) => s.kind === 'stove' && s.item?.kind === 'burnt');
+      if (burnt) act(g, 'trash');
+    }
     const customer = g.state.customers.find((c) => c.state === 'WaitingForFood')!;
     const recipe = recipeById(customer.recipe),
       hot = recipe.steps[0];

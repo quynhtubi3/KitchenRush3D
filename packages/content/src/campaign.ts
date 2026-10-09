@@ -421,7 +421,7 @@ export const levels: CampaignLevel[] = briefs.map(
       patience,
       queuePatience: Math.max(65, patience * 0.8),
       plates: index === 0 ? 2 : 3,
-      burnSeconds: index === 0 ? 14 : 25,
+      burnSeconds: 45,
       stations: layout,
       recipes: number >= 5 ? [basic.id, premium.id] : [basic.id],
       customers: [
@@ -452,6 +452,9 @@ export function scaledLevel(id: string, size: number) {
     extra = size - 1;
   return {
     ...l,
+    // Larger crews have to move between more workstations and handle extra
+    // tickets, so give them a proportionally longer shift.
+    duration: l.duration + 60 * extra,
     targetScore: l.targetScore + 110 * extra,
     targetOrders: l.targetOrders + extra,
     plates: Math.min(4, l.plates + extra),

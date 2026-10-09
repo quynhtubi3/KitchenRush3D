@@ -1,0 +1,72 @@
+# Guest 4.3 — 3D Pass 2 visual audit and work plan
+
+## Scope
+
+This pass improves asset quality and visual readability, with a bounded geometry budget. It does not change simulation, layout coordinates, station reach, recipes, customer timing, unlocks or server authority. The 50-level campaign remains the source of scene layouts.
+
+## Evidence from Pass 1 captures
+
+Reviewed the five desktop campaign captures and five 390×844 touch captures in `docs/screenshots/`, plus the per-scene render JSON.
+
+| Finding                                                             | Capture / measured evidence                                                                                                                                                                                                                               | Action                                                                                                                                                                                                              |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All equipment labels compete with food, chef and order HUD          | Portrait screenshots show a dense row of names and status pills crossing the counters; status is useful only for a subset of stations at once.                                                                                                            | Keep every station directly tappable, but visually de-emphasize distant idle labels and expand near, selected, pinged, ready or warning labels.                                                                     |
+| Counter chassis repeat across station roles                         | Cutting board, range, sink, plate rack, trash, pass and seats share a rounded cabinet, edge, top and drawer face underneath their role-specific details.                                                                                                  | Give open worktables, sink/rack, range/oven, mixing table and waste bin distinct supporting silhouettes while preserving each root, cell and pick target.                                                           |
+| Chef clothing/face detail is hard to parse at match zoom            | Isometric images show chefs as a small face beneath a tall white toque; small shirt/apron details are below mobile pixel size.                                                                                                                            | Simplify tiny details that vanish at match scale; use a clearer head/body/toque proportion and larger, intentional facial shapes.                                                                                   |
+| Cuisine identity is strongest in wall/floor color                   | Tide, Olive, Lantern and Orbit already have distinct rear silhouettes, but most lower cabinets and broad bare center floor still repeat.                                                                                                                  | Carry each theme into station finish and a small number of functional, low-profile props at the perimeter; retain clear movement lanes.                                                                             |
+| Small food garnish adds geometry without reading at distance        | Sesame, rice, veins, tiny surface marks and trim use separate spheres/tubes/boxes.                                                                                                                                                                        | Replace clusters of tiny garnish with few low-poly custom surfaces; prioritize silhouette, layer thickness and cooked-state color.                                                                                  |
+| Existing scene budget has no frame-accurate GPU profile             | Desktop recipe-assembly samples: 304–337 meshes, 138–161 materials, 227k–279k triangles; mobile emulation: 247–262 meshes, 131–155 materials, 190k–214k triangles. The existing probe counts scene-wide geometry, not submitted draw calls or GPU memory. | Add explicit render counters where Babylon exposes them, record unique geometry/texture estimates, reduce static geometry and compare equivalent campaign scenes. Do not use SwiftShader FPS as a device benchmark. |
+| Portrait framing preserves the whole room at the cost of model size | On 390×844 the complete 15×11 kitchen fits horizontally, leaving substantial unused vertical canvas and making small props difficult to distinguish.                                                                                                      | Make station labels contextual and retain pinch zoom/camera recenter. Avoid zoom that removes interactive stations from the reachable view until a tested camera-navigation design exists.                          |
+
+## Available asset tools
+
+The workspace has Babylon.js 8.56.2 and now includes the matching `@babylonjs/loaders` package. Blender, gltfpack and Assimp are unavailable. Pass 1 has no licensed external or original GLB file. Pass 2 adds an optional, lazy glTF/GLB loader/cache with a procedural fallback, but does not claim an imported/sculpted production model without an actual asset. No unlicensed downloads are in scope.
+
+## Implementation sequence
+
+1. Add a visually separate asset provider boundary and optional cached Babylon glTF asset loading; simulation data remains visual input only.
+2. Reduce cost of rounded surfaces and tiny primitive details by size-aware tessellation; preserve higher segments only where the silhouette needs them.
+3. Redesign repeated station supports as open/role-specific furniture and strengthen range, oven, sink, chopping, mixing, pass, storage, rack, trash and seat silhouettes without moving stations.
+4. Replace micro-detail food clusters with legible low-poly pieces. Character meshes received lower, size-aware tessellation; major face/toque proportion redesign remains open.
+5. Make station-name labels contextual, with full emphasis near an interaction, status or signal. Keep touch actions, screen-reader names and warning colors.
+6. Add geometry/material/resource counters and meaningful unit/E2E checks; produce new production screenshots for all cuisines and compare render budgets.
+
+## Pass 3 candidates
+
+Only a later pass with art tooling or specialist review can credibly add sculpted character models, hand-painted/normal texture atlases, authored skeletal animation, baked AO/IBL, physical Android/iOS GPU profiling and a more composed portrait camera/HUD layout. Pass 2 should report honestly if these remain open.
+
+## Pass 2 implementation and verification record
+
+This is a substantive visual/performance increment, **not a claim that the game now meets a professional 3D art bar**. Simulation coordinates, collision/pathfinding, recipes, campaign timings, unlocks, authoritative state, player input and customer behavior were not changed.
+
+- `geometry-budget.ts` selects rounded-box tessellation by bevel/size, lowers small spheres/cylinders/tubes/lathes to camera-appropriate segment counts, and buckets near-identical PBR roughness/metallic finishes. A standard station cabinet now uses 48 triangles in the custom rounded mesh, down from 432.
+- Station roots and occupied cells are unchanged. Board/sink/rack/service stations use open legs and rails, customer booths use an upholstered plinth, trash uses a tapered lathed body, and oven/mixer have glass-door and bowl/whisk silhouettes. These role variants batch under their original station roots, so their picking still resolves to the same station ID.
+- The old sphere-plus-tube lettuce garnish is now a small folded, vertex-colored leaf surface; burger seeds are reduced from nine to three; rice and pasta surface clusters use fewer larger pieces. Fresh and cooked food still use distinct existing geometry/material states.
+- Station labels remain tappable and accessible. Distant idle labels use 42% opacity; nearby labels, warnings, ready/burnt stations, current targets, pings, hover and keyboard focus remain fully emphasized.
+- Shadow map resolution is 768 px with a smaller blur kernel; tiny trim no longer enters the shadow map. A responsive canvas observer keeps Babylon dimensions/camera radius current when the match layout changes. Existing reduced-motion, low-graphics, Solo and Multiplayer paths remain active.
+- `ModelAssetLibrary` lazy-loads the official glTF 2.0 plugin, caches one `AssetContainer` per key, creates independent scene instances and disposes cached instances. The loader is tested with a generated minimal GLB, but no production character, equipment or food has been replaced with a GLB.
+- Render JSON captures now include actual engine draw calls, active mesh count, materials, unique geometry count, triangles, shadow-caster count, and estimated geometry/texture bytes. The byte fields are estimates from CPU-side buffers and texture dimensions; they are not measured GPU allocations.
+
+### Before/after screen evidence
+
+Pass 1 screenshots were copied before Pass 2 captures. New images are live matches, not editor renders or composited mockups. Portrait runs use a 390×844 Chromium touch viewport; desktop runs use 1440×1000. SwiftShader is the screenshot renderer, not a phone benchmark. In desktop recipe-assembly scenes, mean triangles fell from 256,921 to 114,091 (55.6%); mean meshes fell from 323 to 271 (16.2%). Material count changed only from 155 to 152 on average, so it is not a broad material-count reduction. Measured draw calls include passes such as shadow rendering.
+
+| Restaurant | Pass 1 desktop                                       | Pass 2 desktop                                       | Pass 1 portrait                                             | Pass 2 portrait                                     | Pass 2 render stats                                                                                                          |
+| ---------- | ---------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Little Sun | [Before](screenshots/little-sun-43-pass1-before.png) | [After](screenshots/little-sun-43-pass2-desktop.png) | [Before](screenshots/little-sun-43-mobile-pass1-before.png) | [After](screenshots/little-sun-43-pass2-mobile.png) | [Desktop](screenshots/little-sun-43-pass2-desktop-stats.json), [portrait](screenshots/little-sun-43-pass2-mobile-stats.json) |
+| Tide       | [Before](screenshots/tide-43-pass1-before.png)       | [After](screenshots/tide-43-pass2-desktop.png)       | [Before](screenshots/tide-43-mobile-pass1-before.png)       | [After](screenshots/tide-43-pass2-mobile.png)       | [Desktop](screenshots/tide-43-pass2-desktop-stats.json), [portrait](screenshots/tide-43-pass2-mobile-stats.json)             |
+| Olive      | [Before](screenshots/olive-43-pass1-before.png)      | [After](screenshots/olive-43-pass2-desktop.png)      | [Before](screenshots/olive-43-mobile-pass1-before.png)      | [After](screenshots/olive-43-pass2-mobile.png)      | [Desktop](screenshots/olive-43-pass2-desktop-stats.json), [portrait](screenshots/olive-43-pass2-mobile-stats.json)           |
+| Lantern    | [Before](screenshots/lantern-43-pass1-before.png)    | [After](screenshots/lantern-43-pass2-desktop.png)    | [Before](screenshots/lantern-43-mobile-pass1-before.png)    | [After](screenshots/lantern-43-pass2-mobile.png)    | [Desktop](screenshots/lantern-43-pass2-desktop-stats.json), [portrait](screenshots/lantern-43-pass2-mobile-stats.json)       |
+| Orbit      | [Before](screenshots/orbit-43-pass1-before.png)      | [After](screenshots/orbit-43-pass2-desktop.png)      | [Before](screenshots/orbit-43-mobile-pass1-before.png)      | [After](screenshots/orbit-43-pass2-mobile.png)      | [Desktop](screenshots/orbit-43-pass2-desktop-stats.json), [portrait](screenshots/orbit-43-pass2-mobile-stats.json)           |
+
+Little Sun also has a real-match zoomed close-up at [little-sun-43-pass2-closeup.png](screenshots/little-sun-43-pass2-closeup.png).
+
+### Quality limits and remaining work
+
+- The large blank floor and small kitchen in portrait remain visible. Camera zooming far enough to fill that space would cut off stations; a real portrait-composition redesign needs a tested pan/focus scheme and better integration with the HUD. Contextual opacity reduces label clutter but does not move all station labels off the world.
+- Chef/customer design remains assembled from procedural meshes. This pass did not redesign faces, hands, body proportions or chef toque; there are no authored meshes, skin/cloth textures, baked contact shadows, IBL/reflection probes or skeletal clips. Visual quality still needs artist review.
+- The five themes still share common gameplay furniture and base materials. Their established architecture/floor/decorations are distinct, but furniture details and cuisine-specific interactions need more theme-specific design. Some large floor areas remain visually empty.
+- Food is clearer than the prior tiny garnish clusters, but is still low-poly procedural geometry. No full texture atlas, authored food GLB or professional lighting polish exists.
+- No physical Android/iOS capture, GPU allocation, thermal run, Safari/iOS or device FPS profiling was performed. The current SwiftShader readings of roughly 1–5 FPS are not representative of device performance.
+- Build still reports the main client JavaScript chunk above 500 kB (about 1.25 MB minified); the new glTF loader is a separate 454 kB lazy chunk. A deeper Babylon core split is still needed.
+- Guest-only remains active. Database/account/economy/social work was not extended. Docker was not used or verified.

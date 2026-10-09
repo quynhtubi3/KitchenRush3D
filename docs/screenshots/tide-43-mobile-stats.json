@@ -1,0 +1,22 @@
+{
+  "renderer": "Chromium SwiftShader (not a device benchmark)",
+  "viewport": {
+    "name": "mobile",
+    "width": 390,
+    "height": 844
+  },
+  "before": {
+    "meshes": 248,
+    "materials": 150,
+    "fps": 3,
+    "triangles": 205512,
+    "quality": "standard"
+  },
+  "after": {
+    "meshes": 248,
+    "materials": 150,
+    "fps": 3,
+    "triangles": 205512,
+    "quality": "standard"
+  }
+}

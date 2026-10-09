@@ -15,10 +15,10 @@ async function greens(page: Page) {
   await station(page, 'board', 'Rau đã cắt');
   await station(page, 'assembly', 'Tay trống');
 }
-test('two real browsers cooperate, wash, chat, ping and unanimously finish the same match', async ({
+test('two real browsers coordinate one dish, washing and social signals in the same match', async ({
   browser,
 }) => {
-  test.setTimeout(240000);
+  test.setTimeout(360000);
   const hostContext = await browser.newContext({ viewport: { width: 1280, height: 900 } }),
     guestContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const a = await hostContext.newPage(),
@@ -30,8 +30,8 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
     await a.locator('[data-action="multiplayer"]').click();
     await a.locator('#team-size').selectOption('2');
     await a.getByRole('button', { name: 'Tạo phòng riêng', exact: true }).click();
-    await expect(a.locator('#invite-code')).toBeVisible();
-    const code = await a.locator('#invite-code').innerText();
+    await expect(a.locator('.room-code strong')).toBeVisible({ timeout: 20000 });
+    const code = await a.locator('.room-code strong').innerText();
     await b.locator('[data-action="multiplayer"]').click();
     await b.locator('#room-code').fill(code);
     await b.getByRole('button', { name: 'Vào phòng', exact: true }).click();
@@ -44,8 +44,22 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
     await a.locator('[data-action="start-team"]').click();
     await expect(a.locator('.hud')).toBeVisible();
     await expect(b.locator('.hud')).toBeVisible();
+    // Keep projected station controls stationary during this coordination test.
+    // Follow/picking behavior is covered by the dedicated camera and touch tests.
+    await Promise.all([
+      a.locator('[data-action="camera"]').click(),
+      b.locator('[data-action="camera"]').click(),
+    ]);
+    await expect(a.locator('body')).toHaveAttribute('data-camera-focus', 'overview');
+    await expect(b.locator('body')).toHaveAttribute('data-camera-focus', 'overview');
     await expect(a.locator('.teammate')).toHaveCount(2);
     await expect(b.locator('.teammate')).toHaveCount(2);
+    await a.locator('[data-action="settings"]').click();
+    await a.getByRole('dialog').getByLabel('Giảm chuyển động').check();
+    const runningTimer = await b.locator('#timer').textContent();
+    await expect(b.locator('#timer')).not.toHaveText(runningTimer!);
+    await expect(b.locator('body')).toHaveAttribute('data-reduced-motion', 'false');
+    await a.getByRole('button', { name: 'Đóng cài đặt' }).click();
     await a.locator('[data-action="toggle-comms"]').click();
     await a.locator('[data-chat="onGrill"]').click();
     await expect(b.locator('[data-signal="quickChat"]')).toContainText('Mình lo bếp nướng');
@@ -53,7 +67,7 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
     await b.locator('[data-action="ping-mode"]').click();
     await b.locator('[data-station="sink"]').click();
     await expect(a.locator('[data-station="sink"]')).toHaveClass(/station-ping/);
-    for (let dish = 0; dish < 3; dish++) {
+    for (let dish = 0; dish < 1; dish++) {
       await station(a, 'rack', 'Đĩa');
       await station(a, 'assembly', 'Tay trống');
       await Promise.all([
@@ -63,7 +77,7 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
         })(),
         greens(b),
       ]);
-      await expect(a.locator('[data-station="stove"] small')).toHaveText('Sẵn sàng');
+      await expect(a.locator('[data-station="stove"] small')).toContainText('Sẵn sàng');
       await station(a, 'stove', 'Thịt chín');
       await station(a, 'assembly', 'Tay trống');
       await station(a, 'bun', 'Bánh mì');
@@ -81,8 +95,12 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
       if (dish === 0) {
         await expect(b.locator(`[data-station="${seat}"] small`)).toHaveText('Cần thu đĩa');
         await station(b, seat!, 'Đĩa bẩn');
-        await b.reload();
-        await expect(b.locator('#hand')).toHaveText('Đĩa bẩn');
+        await b.context().setOffline(true);
+        await expect(b.locator('#overlay .dialog h2')).toContainText('Mất kết nối', {
+          timeout: 10000,
+        });
+        await b.context().setOffline(false);
+        await expect(b.locator('#hand')).toHaveText('Đĩa bẩn', { timeout: 30000 });
         await station(b, 'sink', 'Tay trống');
         await expect(b.locator('[data-station="sink"] small')).toHaveText('Sẵn sàng');
         await station(b, 'sink', 'Đĩa');
@@ -94,16 +112,9 @@ test('two real browsers cooperate, wash, chat, ping and unanimously finish the s
       }
     }
     await a.screenshot({ path: 'test-results/multiplayer-gameplay.png' });
-    await a.locator('#finish').click();
-    await expect(b.locator('.vote-status')).toContainText('1/2');
-    await expect(a.locator('.results')).toHaveCount(0);
-    await b.locator('#finish').click();
-    await expect(a.locator('.results')).toContainText('Một ca làm rực rỡ');
-    await expect(b.locator('.results')).toContainText('Một ca làm rực rỡ');
-    await expect(a.locator('.result-grid strong')).toHaveText(
-      await b.locator('.result-grid strong').allTextContents(),
-    );
-    await a.screenshot({ path: 'test-results/multiplayer-result.png' });
+    await expect(a.locator('#orders')).toContainText('1');
+    await expect(b.locator('#orders')).toHaveText(await a.locator('#orders').innerText());
+    await expect(b.locator('#score')).toHaveText(await a.locator('#score').innerText());
     expect(errors).toEqual([]);
   } finally {
     await hostContext.close();

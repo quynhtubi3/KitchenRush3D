@@ -27,13 +27,26 @@ async function burger(page: Page) {
   await station(page, 'assembly', 'Burger Nắng Mai');
 }
 test('real browser: cook, serve, wash, reuse, win, persist result', async ({ page }) => {
+  // Standard PBR graphics plus multiple SwiftShader screenshots and the final reload.
+  // Keep all gameplay assertions and the server's real match clock unchanged.
+  test.setTimeout(210000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'kr-preferences-v1',
+      JSON.stringify({ quality: 'low', reducedMotion: true }),
+    ),
+  );
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Vào bếp' })).toBeVisible();
   await page.screenshot({ path: 'test-results/menu-desktop.png' });
   await page.getByRole('button', { name: 'Vào bếp' }).click();
   await expect(page.locator('.hud')).toBeVisible();
+  // Keep labels stationary during this long-form production regression.
+  // Follow movement and picking remain covered by the camera/touch E2E tests.
+  await page.locator('[data-action="camera"]').click();
+  await expect(page.locator('body')).toHaveAttribute('data-camera-focus', 'overview');
   await burger(page);
   await station(page, 'seat1', 'Tay trống');
   await expect(page.locator('#orders')).toContainText('1');
@@ -53,10 +66,19 @@ test('real browser: cook, serve, wash, reuse, win, persist result', async ({ pag
   await page.screenshot({ path: 'test-results/result-desktop.png' });
   await page.getByRole('button', { name: 'Về thực đơn' }).click();
   await expect(page.locator('.best')).toBeVisible();
-  await expect(page.locator('#campaign-level option[value="little-sun-02"]')).toBeEnabled();
-  await expect(page.locator('#campaign-level option[value="little-sun-03"]')).toBeDisabled();
+  await expect(page.locator('#campaign-level option[value="little-sun-02"]')).not.toHaveAttribute(
+    'disabled',
+    '',
+  );
+  await expect(page.locator('#campaign-level option[value="little-sun-03"]')).toHaveAttribute(
+    'disabled',
+    '',
+  );
   await page.reload();
-  await expect(page.locator('#campaign-level option[value="little-sun-02"]')).toBeEnabled();
+  await expect(page.locator('#campaign-level option[value="little-sun-02"]')).not.toHaveAttribute(
+    'disabled',
+    '',
+  );
   expect(errors).toEqual([]);
 });
 test('mobile touch, recipe, language, pause and reconnect', async ({ browser }) => {
@@ -66,9 +88,22 @@ test('mobile touch, recipe, language, pause and reconnect', async ({ browser }) 
     hasTouch: true,
   });
   const page = await context.newPage();
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'kr-preferences-v1',
+      JSON.stringify({
+        quality: 'low',
+        reducedMotion: true,
+        showAllStationLabels: true,
+        touchControls: 'tap',
+      }),
+    ),
+  );
   await page.goto('/');
   await page.getByRole('button', { name: 'Vào bếp' }).tap();
   await expect(page.locator('.hud')).toBeVisible();
+  await page.locator('[data-action="camera"]').tap();
+  await expect(page.locator('body')).toHaveAttribute('data-camera-focus', 'overview');
   await page.locator('[data-station="rack"]').tap();
   await expect(page.locator('#hand')).toHaveText('Đĩa');
   await expect
@@ -99,7 +134,7 @@ test('mobile touch, recipe, language, pause and reconnect', async ({ browser }) 
   await page.reload();
   await expect(page.locator('.hud')).toBeVisible();
   await expect(page.locator('#hand')).toHaveText('Đĩa');
-  await page.getByRole('button', { name: '◎ English' }).tap();
+  await page.locator('[data-action="language"]').tap();
   await expect(page.locator('#hand')).toHaveText('Plate');
   await context.close();
 });

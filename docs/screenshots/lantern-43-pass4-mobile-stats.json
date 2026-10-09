@@ -1,0 +1,34 @@
+{
+  "renderer": "Chromium SwiftShader (not a device benchmark)",
+  "viewport": {
+    "name": "mobile",
+    "width": 390,
+    "height": 844
+  },
+  "before": {
+    "meshes": 242,
+    "activeMeshes": 121,
+    "drawCalls": 230,
+    "materials": 153,
+    "uniqueGeometries": 242,
+    "fps": 5,
+    "triangles": 106050,
+    "geometryBytesEstimated": 3522136,
+    "textureBytesEstimated": 10198060,
+    "shadowCasters": 108,
+    "quality": "standard"
+  },
+  "after": {
+    "meshes": 242,
+    "activeMeshes": 121,
+    "drawCalls": 230,
+    "materials": 153,
+    "uniqueGeometries": 242,
+    "fps": 4,
+    "triangles": 106050,
+    "geometryBytesEstimated": 3522136,
+    "textureBytesEstimated": 10198060,
+    "shadowCasters": 108,
+    "quality": "standard"
+  }
+}

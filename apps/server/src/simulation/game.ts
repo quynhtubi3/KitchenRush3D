@@ -25,12 +25,22 @@ export class Game {
   readonly blocked: Set<string>;
   readonly content;
   private guestSerial = 0;
+  private itemSerial = 0;
   constructor(
     config: Partial<typeof level> = {},
     readonly matchId = 'local',
   ) {
     this.content = getLevel(config.id ?? level.id);
-    this.config = { ...this.content, ...config };
+    this.config = {
+      ...this.content,
+      ...config,
+      // Preserve the original single-player timing for direct simulation callers;
+      // campaign matches use the authored per-level burn window.
+      burnSeconds:
+        typeof config.id === 'string'
+          ? (config.burnSeconds ?? this.content.burnSeconds)
+          : level.burnSeconds,
+    };
     this.blocked = new Set(this.content.stations.map(key));
     this.state = {
       phase: 'playing',
@@ -60,7 +70,7 @@ export class Game {
     this.spawn();
   }
   private item(kind: ItemKind): Item {
-    return { id: `item-${++this.serial}`, kind, parts: [] };
+    return { id: `item-${++this.itemSerial}`, kind, parts: [] };
   }
   station(id: string) {
     const s = this.state.stations.find((s) => s.id === id);
@@ -193,6 +203,7 @@ export class Game {
           .find((step) => step.station === s.id && step.inputs[0] === hand?.kind);
         if (!s.item && hand && step) {
           put();
+          if (s.item) (s.item as Item & { elapsed?: number }).elapsed = 0;
           s.phase = 'processing';
           s.process = { output: step.output, taps: step.taps, seconds: step.seconds };
           s.elapsed = 0;

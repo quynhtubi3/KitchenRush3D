@@ -1,0 +1,159 @@
+{
+  "viewport": {
+    "width": 360,
+    "height": 640
+  },
+  "canvas": {
+    "x": 0,
+    "y": 150,
+    "width": 360,
+    "height": 326,
+    "cssHeight": "326px",
+    "cssTop": "150px",
+    "cssBottom": "164px"
+  },
+  "hud": {
+    "x": 10,
+    "y": 58,
+    "width": 340,
+    "height": 51
+  },
+  "orders": {
+    "x": 10,
+    "y": 106,
+    "width": 340,
+    "height": 42
+  },
+  "hand": {
+    "x": 114,
+    "y": 484,
+    "width": 132,
+    "height": 44
+  },
+  "joystick": {
+    "x": 14,
+    "y": 530,
+    "width": 96,
+    "height": 96
+  },
+  "interact": {
+    "x": 238,
+    "y": 544,
+    "width": 108,
+    "height": 82
+  },
+  "camera": {
+    "profile": "mobile-portrait",
+    "orthoWidth": 14.36,
+    "orthoHeight": 13.01,
+    "zoom": 1.1,
+    "targetX": 0,
+    "targetZ": 1.44,
+    "targetBoundX": 3.4,
+    "targetBoundZ": 2.8,
+    "chefHeightPx": 40,
+    "chefX": 0,
+    "chefZ": 3,
+    "stationsInFrame": 12,
+    "edgeMarkers": 0
+  },
+  "gameplayOcclusionPercent": 3.7,
+  "stationLabels": [
+    {
+      "id": "meat",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 290,
+      "y": 153
+    },
+    {
+      "id": "stove",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 226,
+      "y": 153
+    },
+    {
+      "id": "lettuce",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 175,
+      "y": 153
+    },
+    {
+      "id": "board",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 139,
+      "y": 153
+    },
+    {
+      "id": "bun",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 82,
+      "y": 153
+    },
+    {
+      "id": "rack",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 305,
+      "y": 212
+    },
+    {
+      "id": "sink",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 307,
+      "y": 270
+    },
+    {
+      "id": "trash",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 300,
+      "y": 316
+    },
+    {
+      "id": "assembly",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 180,
+      "y": 246
+    },
+    {
+      "id": "counter",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 118,
+      "y": 246
+    },
+    {
+      "id": "seat1",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 14,
+      "y": 212
+    },
+    {
+      "id": "seat2",
+      "context": "idle",
+      "onScreen": true,
+      "offscreen": false,
+      "x": 27,
+      "y": 282
+    }
+  ]
+}

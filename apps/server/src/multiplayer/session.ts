@@ -13,7 +13,12 @@ import { parseIntent } from '../rooms/protocol';
 export const RECONNECT_SECONDS = 20;
 export const LOBBY_TIMEOUT_SECONDS = 600;
 export function teamConfig(size: number, id = level.id) {
-  return scaledLevel(id, size);
+  const config = scaledLevel(id, size);
+  return {
+    ...config,
+    patience: config.patience + (size - 1) * 20,
+    queuePatience: config.queuePatience + (size - 1) * 12,
+  };
 }
 export class KitchenSession {
   game: Game;

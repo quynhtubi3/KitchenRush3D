@@ -1,6 +1,6 @@
 {
   "name": "kitchen-rush-3d",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -16,7 +16,8 @@
     "db:migrate": "tsx database/migrate.ts",
     "db:seed": "tsx database/seed.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:db": "vitest run tests/postgres-account.integration.test.ts"
   },
   "overrides": {
     "nanoid": "^3.3.19",

@@ -26,7 +26,7 @@ Within each restaurant: shifts 1–2 introduce its recipe; shift 3 introduces VI
 
 All types still queue, wait, eat and leave a dirty plate. Complex customers order the longer recipe. An expired customer breaks the team combo. There is no direct trash penalty.
 
-First shifts last 180 seconds; later shifts last 240–360 seconds, with 210-second transition shifts in Little Sun. The configured duration is a time limit, not a forced minimum: a skilled team can vote to finish early. At match start, each additional chef adds one required order and 110 required points, shortens spawn interval by four seconds (floor 12), and adds one plate (cap four). These parameters remain frozen when players disconnect.
+First shifts last 180 seconds; later shifts last 240–360 seconds, with 210-second transition shifts in Little Sun. The configured duration is a time limit, not a forced minimum: a skilled team can vote to finish early. At match start, each additional chef adds 60 seconds, one required order, 110 required points, shortens spawn interval by four seconds (floor 12), and adds one plate (cap four). These parameters remain frozen when players disconnect.
 
 One star requires both score and order targets. Two stars require the second score threshold. Three stars require the third score threshold plus the configured maximum missed guests, average service time and minimum best combo. Thresholds are level data; three-star limits appear in the recipe notebook. More than one star is never required to unlock content.
 
@@ -40,6 +40,6 @@ Progress is stored in `kr-campaign-wins` and `kr-stars-<levelId>` in localStorag
 
 `tests/campaign.test.ts` runs 200 complete matches (50 × 1/2/3/4) through normal intents and fixed 50ms simulation ticks. It does not edit timers, positions, inventory, score, customers or results. It checks winning outcomes, unique ownership and conservation of plates. For teams, chefs take different preparation/serving roles; these tests are in-process, not 200 network/browser matches.
 
-`tests/e2e/campaign.spec.ts` loads every level in real Chromium and cooks/serves one basic dish per cuisine. Its localStorage fixture unlocks navigation only; match state/results are never injected. The existing Solo E2E wins the first shift and checks the genuine unlock persists after reload. The co-op E2E completes a real two-browser match; network tests cover the other team sizes and non-default kitchens. See PROGRESS for results of actual runs.
+`tests/e2e/campaign.spec.ts` loads every level in real Chromium and cooks/serves one basic dish per cuisine. Its localStorage fixture unlocks navigation only; match state/results are never injected. The existing Solo E2E wins the first shift and checks the genuine unlock persists after reload. The co-op E2E uses two browsers in one live match to cook/serve a dish and verify synchronized state; unanimity rules are verified by session tests. See PROGRESS for results of actual runs.
 
 Database seed now upserts fifty levels and ten recipes as content version 2. PostgreSQL execution is still unverified in this environment. Future persistent progress should preserve these IDs and migrate explicitly if IDs change.

@@ -62,6 +62,7 @@ export type Result = {
   matchId: string;
 };
 export type Snapshot = {
+  countdown?: number;
   levelId?: string;
   phase: 'lobby' | 'playing' | 'paused' | 'finished';
   session?: SessionState;

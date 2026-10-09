@@ -34,6 +34,16 @@ Phase 4 must implement transactional match finalization, participant eligibility
 
 ## Rendering
 
+Guest 4.2: `mobile-controls.ts` quantizes touch input to eight screen directions, transforms through the local camera and emits short existing `move` intents at a bounded cadence. Grid BFS and speed remain unchanged on the server; diagonal input follows grid segments. Cancel/release completes only the current tile segment. Nearby interaction chooses within 1.55 tiles and sends the existing `interact`; client selection cannot bypass server validation. Native Settings remains outside the HUD; opening it cancels joystick input without sending pause.
+
+`feedback.ts` derives readiness, near-burn and patience cues from snapshots/content only. Audio cues are deduplicated by item/customer identity. No gameplay timer or result is inferred as authoritative on the client. CSS reserves joystick areas and the camera/label projection uses the actual canvas rectangle in either orientation.
+
+Guest preferences live in `apps/client/src/preferences.ts` with a versioned browser-storage key and bounded input parsing. `settings.ts` owns a native dialog outside the frequently rebuilt HUD, so network snapshots cannot replace focused controls. Preferences change local audio/scene rendering only; opening Settings sends no pause or gameplay command. Low quality disables shadows and lowers render resolution; reduced motion suppresses decorative animation and camera following while preserving position interpolation.
+
+`KitchenAudio` creates its context only after user interaction. Master, music and SFX have separate gain nodes; an original procedural motif is selected for menu/restaurant. Muting or hiding the tab silences the master and prevents new notes. These settings are local, not network state.
+
+`GUEST_ONLY=true` explicitly disables the account database pool even if a URL is present. Without this flag, a configured but unavailable DB remains an account service error rather than silently switching persistence modes. Account code is retained but deferred; see PROGRESS.md for verification gaps.
+
 All required 3D assets are authored as Babylon meshes. The game has no model downloads or missing-GLB failure path. A clear error replaces the UI if WebGL cannot initialize. Tap targets use projected HTML labels in addition to mesh picking. Per-client camera zoom/follow changes no simulation data. Low back walls and an open front keep the kitchen visible; generalized dynamic occluder fading is not implemented.
 
 ## References

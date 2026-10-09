@@ -29,9 +29,11 @@ async function createPair() {
   await wait(() => snapshot(a).session!.members.every((m) => m.ready));
   a.send('intent', { type: 'start' });
   await wait(() => snapshot(a).phase === 'playing' && snapshot(b).phase === 'playing');
+  await wait(() => !snapshot(a).countdown && !snapshot(b).countdown);
   return [a, b] as const;
 }
 async function act(r: Room, station: string) {
+  await wait(() => !snapshot(r).countdown);
   const seq = snapshot(r).event.seq;
   r.send('intent', { type: 'interact', station });
   await wait(() => snapshot(r).event.seq > seq && !snapshot(r).chefs[r.sessionId]?.target);
@@ -60,6 +62,21 @@ afterAll(async () => {
   await server.gracefullyShutdown(false);
 });
 describe('real Colyseus clients', () => {
+  it('synchronizes preparation countdown without consuming match time or items', async () => {
+    const a = await track(new Client(endpoint).create('coop_private', { teamSize: 2 }));
+    const b = await track(new Client(endpoint).joinById(a.roomId));
+    a.send('intent', { type: 'ready', ready: true });
+    b.send('intent', { type: 'ready', ready: true });
+    await wait(() => snapshot(a).session!.members.every((m) => m.ready));
+    a.send('intent', { type: 'start' });
+    await wait(() => Boolean(snapshot(a).countdown) && Boolean(snapshot(b).countdown));
+    const time = snapshot(a).remaining;
+    a.send('intent', { type: 'interact', station: 'bun' });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(snapshot(a).remaining).toBe(time);
+    expect(hand(a)).toBeNull();
+    await wait(() => !snapshot(a).countdown && snapshot(a).remaining < time);
+  });
   it('matches by level as well as team size and synchronizes a non-default kitchen', async () => {
     const a = await track(
       new Client(endpoint).joinOrCreate('coop_public', { teamSize: 2, levelId: 'tide-05' }),

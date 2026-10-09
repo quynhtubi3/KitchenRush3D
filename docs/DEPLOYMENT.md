@@ -2,15 +2,17 @@
 
 ## Local
 
+Current release prioritizes Guest gameplay. Set `GUEST_ONLY=true` to disable account endpoints and database connections even when `DATABASE_URL` exists. Guest campaign progress stays in browser storage; no cross-device persistence is claimed. PowerShell: `$env:GUEST_ONLY='true'; npm.cmd run dev`. To resume account validation later, explicitly set `GUEST_ONLY=false` with a migrated database. Compose defaults to Guest mode but still provisions its database/migration services; Docker execution remains unverified.
+
 Node.js 24; `npm ci`, `npm run dev`. Vite listens on all interfaces at 5173, Colyseus at 2567. Default endpoints use the current page hostname, allowing a LAN phone to reach the same server. No frontend secret is needed. On PowerShell use `.cmd` variants if script execution is restricted.
 
-`npm run build` typechecks and emits `apps/client/dist` and `apps/server/dist/index.js`. `npm run start -w @kitchen/server` runs the built server. Serve the client with Nginx or `npm run preview -w @kitchen/client` for local build checks.
+`npm run build` typechecks and emits `apps/client/dist` and `apps/server/dist/index.js`. `npm run start -w @kitchen/server` runs the built server. Production clients default to the page origin for HTTP matchmaking and WebSocket connections. For local build checks, set `CLIENT_DIST` to the absolute `apps/client/dist` path and serve through the Node server, or use the included Nginx proxy. A standalone Vite preview needs an explicit `VITE_SERVER_URL` at build time because preview does not proxy the game server. Development still uses the page hostname at port 2567.
 
 ## Docker Compose
 
 `docker compose up --build` starts PostgreSQL, migration/seed job, Node server and Nginx. Client: port 8080. Server: 2567. Database port binds loopback only. `docker compose down` preserves the named database volume. Do not remove the volume unless you intend to erase database data.
 
-Set `POSTGRES_PASSWORD` for deployed environments. The development password in the example is not a production credential. Database tables are currently a foundation and do not persist phase-1 gameplay.
+Set `POSTGRES_PASSWORD` for deployed environments. The development password in the example is not a production credential. Migration 002 adds database-backed accounts, sessions, guest identities and campaign progress; the server uses `DATABASE_URL` from Compose. Database execution still needs verification on a machine with Docker/PostgreSQL.
 
 ## HTTPS/WSS
 
@@ -77,7 +79,7 @@ $env:E2E_PRODUCTION='true'
 npm.cmd run test:e2e
 ```
 
-Playwright starts the production server on loopback port 2569, serves the built client and stops it after the suite. Leave `E2E_BASE_URL` unset for this mode. This avoids Vite HMR interrupting active matches while testing.
+Playwright starts the production server on loopback port 2570, serves the built client and stops it after the suite. Leave `E2E_BASE_URL` unset for this mode. This avoids Vite HMR interrupting active matches while testing.
 
 Both Solo and co-op use the same Node process and ports. Open two browser profiles/contexts or devices and share the private room code, or choose the same public team size. The Compose services already serve all three room types (`solo`, `coop_private`, `coop_public`); no additional service or external account is required.
 

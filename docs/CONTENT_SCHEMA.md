@@ -8,6 +8,6 @@ Source of truth: `packages/content/src/index.ts` preserves the original schemas 
 
 The simulation executes the validated recipe subset: single-input active processors, single-input automatic processors, dependency chains through intermediate items, independent branches and final plate assembly. `validation.ts` rejects unknown references, ambiguous processors, missing producer edges, unsupported processing modes, unused branches and assembly/component mismatch. Processors retain one slot; multi-slot processing is not supported. Tests check all station interactions are reachable from four spawns and win all fifty levels with normal intents.
 
-Levels add restaurant ID, local shift number, localized name, recipe menu, guest sequence, station layout and tutorial flag. Team scaling resolves once at match start. Snapshots and results carry a level ID. Local wins/stars implement sequential unlocks; authenticated progress remains phase 4.
+Levels add restaurant ID, local shift number, localized name, recipe menu, guest sequence, station layout and tutorial flag. Team scaling resolves once at match start. Snapshots and results carry a level ID. Without a configured PostgreSQL database, local wins/stars provide Guest progression. With the phase 4.1 account API enabled, only server-recorded wins unlock levels; legacy local progress is archived as unverified and does not grant unlocks.
 
 Database seed upserts only validated content inside a transaction. Re-running seed does not duplicate content. It does not seed fake scores or accounts.

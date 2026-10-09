@@ -1,6 +1,6 @@
 # Campaign balance evidence
 
-Generated from 200 passing intent-driven simulations, version 0.3.0. Completion times are simulation seconds for a deterministic test driver, **not human playtest averages**. Team roles participate sequentially in this conservative driver. Time limits can be exhausted or ended early after both goals; test wins end early. All positions, cooking, dishes, customers, score and results are produced by the game engine.
+Generated from 200 passing intent-driven simulations, version 0.3.0. Completion times are simulation seconds for a deterministic test driver, **not human playtest averages**. Team roles participate sequentially in this conservative driver. Time limits can be exhausted or ended early after both goals; test wins end early. All positions, cooking, dishes, customers, score and results are produced by the game engine. The time-limit column is the solo base; each additional chef adds 60 seconds at match start.
 
 | Level         | Brief             | Time limit | Solo points / orders | Guest cycle                                         | Finish seconds: Solo / 2 / 3 / 4 |
 | ------------- | ----------------- | ---------- | -------------------- | --------------------------------------------------- | -------------------------------- |

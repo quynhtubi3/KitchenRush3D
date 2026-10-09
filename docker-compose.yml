@@ -24,6 +24,9 @@ services:
     ports: ['2567:2567']
     environment:
       PORT: 2567
+      NODE_ENV: production
+      GUEST_ONLY: ${GUEST_ONLY:-true}
+      DATABASE_URL: postgres://kitchen:${POSTGRES_PASSWORD:-kitchen_local}@database:5432/kitchen
     depends_on:
       migrate: { condition: service_completed_successfully }
     healthcheck:
