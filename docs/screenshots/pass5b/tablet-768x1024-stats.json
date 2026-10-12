@@ -16,7 +16,7 @@
     "x": 10,
     "y": 58,
     "width": 748,
-    "height": 51
+    "height": 55
   },
   "orders": {
     "x": 10,
@@ -74,96 +74,96 @@
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 599,
-      "y": 235
+      "x": 598,
+      "y": 233
     },
     {
       "id": "stove",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 493,
-      "y": 235
+      "x": 492,
+      "y": 233
     },
     {
       "id": "lettuce",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 400,
-      "y": 235
+      "x": 399,
+      "y": 233
     },
     {
       "id": "board",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 322,
-      "y": 235
+      "x": 321,
+      "y": 233
     },
     {
       "id": "bun",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 223,
-      "y": 235
+      "x": 222,
+      "y": 233
     },
     {
       "id": "rack",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 634,
-      "y": 352
+      "x": 633,
+      "y": 350
     },
     {
       "id": "sink",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 636,
-      "y": 448
+      "x": 635,
+      "y": 446
     },
     {
       "id": "trash",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 631,
-      "y": 533
+      "x": 630,
+      "y": 531
     },
     {
       "id": "assembly",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 405,
-      "y": 406
+      "x": 404,
+      "y": 404
     },
     {
       "id": "counter",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 301,
-      "y": 406
+      "x": 300,
+      "y": 404
     },
     {
       "id": "seat1",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 113,
-      "y": 352
+      "x": 112,
+      "y": 350
     },
     {
       "id": "seat2",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 126,
-      "y": 480
+      "x": 125,
+      "y": 478
     }
   ]
 }

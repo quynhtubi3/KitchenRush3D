@@ -1,0 +1,16 @@
+{
+  "viewport": { "name": "portrait", "width": 390, "height": 844 },
+  "renderer": "Chromium SwiftShader, touch profile; not native hardware",
+  "meshes": 273,
+  "activeMeshes": 219,
+  "drawCalls": 345,
+  "drawCallsMean": 269.24,
+  "materials": 135,
+  "uniqueGeometries": 273,
+  "fps": 1,
+  "triangles": 114780,
+  "geometryBytesEstimated": 3765584,
+  "textureBytesEstimated": 7561386,
+  "shadowCasters": 127,
+  "quality": "standard"
+}

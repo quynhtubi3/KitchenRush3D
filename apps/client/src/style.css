@@ -114,12 +114,57 @@ button[hidden] {
   top: 82px;
   right: 38px;
   width: min(410px, calc(100vw - 32px));
+  max-height: calc(100vh - 98px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  pointer-events: auto;
   padding: 24px;
   border: 1px solid #e7ddc5;
   border-radius: 18px;
   background: #fffdf5;
   box-shadow: 0 20px 60px #173c3540;
   color: #234c45;
+}
+.account-auth-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 16px 0 18px;
+  padding: 4px;
+  border: 1px solid #d8d2bf;
+  border-radius: 13px;
+  background: #f3eedf;
+}
+.account-auth-modes button {
+  min-height: 44px;
+  padding: 9px 8px;
+  background: transparent;
+  font-size: 13px;
+}
+.account-auth-modes button[aria-pressed='true'] {
+  background: #ffc72c;
+  box-shadow: 0 2px 0 #25243a22;
+}
+.account-auth[data-mode='login'] .account-register-only,
+.account-auth[data-mode='register'] .account-login-only {
+  display: none !important;
+}
+.account-field-help {
+  margin: -5px 0 12px;
+  color: #597168;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.account-import-options {
+  margin: 14px 0;
+  color: #597168;
+  font-size: 12px;
+}
+.account-import-options summary {
+  min-height: 36px;
+  padding: 8px 0;
+  cursor: pointer;
 }
 .account-panel > strong,
 .account-panel > small {
@@ -138,6 +183,14 @@ button[hidden] {
   gap: 6px;
   margin: 12px 0;
   font-size: 12px;
+}
+.account-panel .account-import {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+.account-panel .account-import input {
+  width: auto;
+  margin-top: 2px;
 }
 .account-panel input {
   width: 100%;
@@ -272,6 +325,62 @@ h2 {
   font-size: 16px;
   display: flex;
   justify-content: space-between;
+}
+.save-progress-nudge {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 9px;
+  width: min(345px, 100%);
+  margin-top: 12px;
+  padding: 11px 34px 11px 12px;
+  border: 1px solid #fff;
+  border-radius: 13px;
+  color: var(--pop-ink);
+  background: #fff9ebed;
+  box-shadow: 0 3px 0 #25243a1a;
+}
+.save-progress-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+  font-size: 17px;
+}
+.save-progress-copy strong,
+.save-progress-copy small {
+  display: block;
+}
+.save-progress-copy strong {
+  font-size: 12px;
+}
+.save-progress-copy small {
+  margin-top: 3px;
+  color: #596960;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.save-progress-open {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+.save-progress-dismiss {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  min-width: 25px;
+  min-height: 25px;
+  padding: 0;
+  color: #68756c;
+  background: transparent;
+  font-size: 16px;
 }
 .micro {
   font-size: 10px;
@@ -476,6 +585,18 @@ body[data-screen='menu'] #app {
     background-color 140ms ease,
     box-shadow 140ms ease;
 }
+.station-label[data-component-source='true'],
+.station-label[data-component-source='true'][data-context='idle'] {
+  min-height: 44px;
+  padding: 8px 11px;
+  border: 2px solid #dcaa56;
+  background: #fff8e6f2;
+  box-shadow: 0 2px 7px #163b2940;
+  font-size: 11px;
+  font-weight: 750;
+  opacity: 1;
+  z-index: 5;
+}
 .station-label[data-context='idle'] {
   opacity: 0.42;
 }
@@ -588,6 +709,30 @@ body[data-screen='menu'] #app {
 .bottom-bar .primary {
   font-size: 11px;
 }
+.cat-pet-action {
+  position: fixed;
+  z-index: 8;
+  transform: translate(-50%, -100%);
+  max-width: min(180px, calc(100vw - 24px));
+  padding: 9px 13px;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  background: #fff8e9f2;
+  color: #234c45;
+  box-shadow: 0 5px 18px #17382e35;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.cat-pet-action:disabled {
+  color: #6c766c;
+  background: #f4f0e5f0;
+  cursor: default;
+}
+.cat-pet-action[hidden] {
+  display: none;
+}
 .game-tools {
   position: absolute;
   right: 30px;
@@ -630,6 +775,38 @@ body[data-screen='menu'] #app {
   display: block;
   width: 100%;
   margin-top: 14px;
+}
+.webgl-recovery {
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(22px, 6vw, 38px);
+}
+.webgl-recovery h2 {
+  margin: 12px 0;
+}
+.webgl-recovery p {
+  color: #53665e;
+  font-size: clamp(15px, 4vw, 17px);
+  line-height: 1.55;
+}
+.webgl-recovery-actions {
+  margin-top: 20px;
+}
+.webgl-recovery details {
+  margin-top: 18px;
+  color: #66746d;
+  font-size: 12px;
+  text-align: left;
+}
+.webgl-recovery summary {
+  cursor: pointer;
+}
+.webgl-recovery code {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 .dialog-symbol {
   font-size: 55px;
@@ -789,6 +966,33 @@ body[data-screen='menu'] #app {
   .header-actions {
     gap: 5px;
   }
+  .account-panel {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    left: max(12px, env(safe-area-inset-left));
+    width: auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(
+      100dvh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom))
+    );
+    padding: 22px 16px max(18px, env(safe-area-inset-bottom));
+    border-radius: 20px;
+    touch-action: pan-y;
+  }
+  .account-panel label {
+    font-size: 13px;
+  }
+  .account-panel input {
+    min-height: 46px;
+    font-size: 16px;
+  }
+  .account-actions button {
+    min-height: 46px;
+  }
+  .account-auth-modes button {
+    min-height: 46px;
+    font-size: 14px;
+  }
   .subtle {
     padding: 9px;
     font-size: 10px;
@@ -832,6 +1036,23 @@ body[data-screen='menu'] #app {
     padding: 13px 18px;
     margin-top: 16px;
     font-size: 14px;
+  }
+  .save-progress-nudge {
+    grid-template-columns: 28px minmax(0, 1fr) 34px;
+    gap: 7px;
+    margin-top: 9px;
+    padding: 9px 30px 9px 9px;
+    border-radius: 11px;
+  }
+  .save-progress-copy strong {
+    font-size: 11px;
+  }
+  .save-progress-copy small {
+    font-size: 9px;
+  }
+  .save-progress-open {
+    min-width: 34px;
+    min-height: 38px;
   }
   .micro {
     font-size: 8px;
@@ -1049,8 +1270,11 @@ label select {
 }
 #lobby {
   display: flex;
+  align-items: center;
   justify-content: center;
   width: 100%;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
 }
 .lobby-panel {
@@ -1118,6 +1342,24 @@ label select {
 .lobby-panel p {
   font-size: 12px;
   color: #687f6d;
+}
+.lobby-panel .crew-note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #edf1df;
+  line-height: 1.45;
+}
+.crew-note strong,
+.team-streak-result {
+  color: #c47749;
+  white-space: nowrap;
+}
+.team-waiting {
+  margin: 8px 0;
 }
 .lobby-actions {
   display: flex;
@@ -2280,6 +2522,30 @@ body[data-reduced-motion='true'] *::after {
   }
 }
 @media (orientation: landscape) and (max-height: 600px) {
+  body[data-screen='game'] .orders-list[data-expanded='false'] .orders-content {
+    display: none;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] {
+    flex-direction: column;
+    width: min(220px, 42vw);
+    max-height: 42dvh;
+    padding: 5px;
+    overflow: auto;
+    border: 1px solid #c4d2c6;
+    border-radius: 13px;
+    background: #f8f5e9f5;
+    box-shadow: 0 8px 24px #1b312c30;
+    backdrop-filter: blur(8px);
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] .orders-content {
+    flex-direction: column;
+    width: 100%;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] .ticket {
+    width: 100%;
+  }
+}
+@media (orientation: landscape) and (max-height: 600px) {
   .guidance-card {
     bottom: max(8px, env(safe-area-inset-bottom));
     left: max(12px, env(safe-area-inset-left));
@@ -2339,7 +2605,9 @@ body[data-reduced-motion='true'] *::after {
   }
   body[data-screen='game'] .orders-list[data-expanded='true'] {
     align-content: flex-start;
+    align-items: stretch;
     flex-wrap: wrap;
+    flex-direction: column;
     max-height: min(34dvh, 280px);
     overflow: auto;
     padding: 5px;
@@ -2397,5 +2665,421 @@ body[data-reduced-motion='true'] *::after {
     right: max(14px, env(safe-area-inset-right));
     bottom: calc(12px + env(safe-area-inset-bottom));
     min-height: 78px;
+  }
+}
+
+/* Compact play rails: keep the kitchen visible and open order details on demand. */
+@media (max-width: 700px) and (orientation: portrait) {
+  body[data-screen='game'] .topbar {
+    height: 42px;
+    padding: 3px max(8px, env(safe-area-inset-right)) 3px max(8px, env(safe-area-inset-left));
+  }
+  body[data-screen='game'] .brand {
+    gap: 0;
+  }
+  body[data-screen='game'] .brand > span:last-child {
+    display: none;
+  }
+  body[data-screen='game'] .brand-icon {
+    font-size: 26px;
+  }
+  body[data-screen='game'] .header-actions {
+    gap: 4px;
+  }
+  body[data-screen='game'] .header-actions .subtle {
+    min-width: 36px;
+    min-height: 34px;
+    padding: 6px 8px;
+  }
+  body[data-screen='game'] .hud {
+    top: calc(44px + env(safe-area-inset-top));
+    min-height: 40px;
+    padding: 4px 7px;
+    gap: 3px;
+    border-radius: 12px;
+  }
+  body[data-screen='game'] .hud .stat small {
+    font-size: 9px;
+    margin-bottom: 0;
+  }
+  body[data-screen='game'] .hud .stat strong {
+    font-size: clamp(16px, 4.3vw, 19px);
+  }
+  body[data-screen='game'] .hud .stat em {
+    font-size: 9px;
+  }
+  body[data-screen='game'] .hud .icon-button {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 5px 8px;
+  }
+  body[data-screen='game'] .orders-list {
+    top: calc(84px + env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    width: auto;
+    min-height: 0;
+    max-height: min(36dvh, 300px);
+    overflow: visible;
+    z-index: 9;
+  }
+  body[data-screen='game'] .orders-toggle {
+    min-width: 82px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #b7cbc0;
+    border-radius: 12px;
+    color: #204a40;
+    background: #fffdf4f5;
+    box-shadow: 0 3px 12px #203b3024;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  body[data-screen='game'] .orders-toggle[data-urgent='true'] {
+    border-color: #b64e35;
+    color: #8e3329;
+    background: #fff0e9f7;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='false'] .orders-content {
+    display: none;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] {
+    align-content: flex-start;
+    flex-wrap: wrap;
+    overflow: auto;
+    padding: 5px;
+    border: 1px solid #c4d2c6;
+    border-radius: 14px;
+    background: #f8f5e9f5;
+    box-shadow: 0 8px 24px #1b312c30;
+    backdrop-filter: blur(8px);
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] .orders-content {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 6px;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] .orders-toggle {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3;
+  }
+  body[data-screen='game'] .orders-list[data-expanded='true'] .ticket {
+    width: 100%;
+    min-width: 0;
+    padding: 7px 9px;
+    border-radius: 10px;
+  }
+  body[data-screen='game'] #game {
+    top: calc(124px + env(safe-area-inset-top));
+    bottom: calc(112px + env(safe-area-inset-bottom));
+    height: calc(
+      100dvh - 236px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    ) !important;
+  }
+  body[data-screen='game'] .game-tools {
+    top: calc(126px + env(safe-area-inset-top));
+  }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  body[data-screen='game'][data-controls='tap'] #game {
+    bottom: calc(112px + env(safe-area-inset-bottom));
+    height: calc(
+      100dvh - 236px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    ) !important;
+  }
+}
+
+/* Multi-dish menus keep the recipe book compact on narrow screens. */
+.recipe-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+.recipe-tabs .recipe-tab {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.recipe-tabs .recipe-tab[aria-pressed='true'] {
+  background: #285b50;
+  color: #fff8e8;
+}
+@media (max-width: 600px) {
+  .recipe-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .recipe-tabs .recipe-tab {
+    padding: 8px;
+    white-space: normal;
+  }
+  .notebook .recipe-hero {
+    font-size: 36px;
+    margin-top: 4px;
+  }
+}
+
+/* Chaotic Pop 3D Pass 1: one color system shared by the campaign menu, HUD and room themes. */
+:root {
+  --pop-ink: #25243a;
+  --pop-paper: #fff9e9;
+  --pop-room: #f0d994;
+  --pop-cabinet: #15545c;
+  --pop-accent: #ffc72c;
+  --pop-secondary: #f4513d;
+  --pop-wood: #704035;
+  --pop-muted: #555269;
+  --pop-danger: #d84235;
+  --pop-success: #19734f;
+  --pop-warning: #b66a00;
+  color: var(--pop-ink);
+  background: var(--pop-room);
+}
+body {
+  color: var(--pop-ink);
+  background: var(--pop-room);
+}
+button {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 1px solid #25243a26;
+  box-shadow: 0 3px 0 #25243a1a;
+}
+button:hover {
+  background: var(--pop-accent);
+}
+button:focus-visible,
+a:focus-visible {
+  outline-color: var(--pop-secondary);
+}
+.topbar .brand,
+.brand {
+  color: var(--pop-ink);
+}
+.brand-icon,
+.eyebrow > span,
+.sun {
+  color: var(--pop-secondary);
+}
+.brand b {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+.subtle {
+  color: var(--pop-ink);
+  background: #fff9e9ed;
+  border: 1px solid #25243a30;
+  box-shadow: 0 3px 0 #25243a20;
+}
+body[data-screen='menu'] {
+  background: var(--pop-room);
+  background:
+    radial-gradient(ellipse at 86% 17%, #f4513d70, transparent 31%),
+    radial-gradient(ellipse at 77% 82%, #ffc72c8c, transparent 36%), var(--pop-room);
+}
+body[data-screen='menu'] #app {
+  background: linear-gradient(90deg, #fff1d2fa 0%, #fff1d2ee 31%, #fff1d2a8 49%, transparent 66%);
+}
+.intro h1 {
+  color: var(--pop-ink);
+  text-shadow: 2px 2px 0 #fff9e9b0;
+}
+.description,
+.micro,
+.location small,
+.scene-caption small {
+  color: #4d4b60;
+}
+.location {
+  background: var(--pop-paper);
+  border: 2px solid var(--pop-cabinet);
+  box-shadow: 5px 5px 0 #25243a30;
+}
+.location-number {
+  color: var(--pop-secondary);
+}
+.primary,
+.primary:hover {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+  border-color: var(--pop-accent);
+  box-shadow: 0 4px 0 #25243a62;
+}
+.primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #25243a62;
+}
+button:disabled,
+button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.56;
+  filter: saturate(0.45);
+  transform: none;
+  box-shadow: none;
+}
+button:disabled:hover,
+button[aria-disabled='true']:hover {
+  background: var(--pop-paper);
+  transform: none;
+}
+.coop-entry {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+.scene-caption {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 2px solid var(--pop-ink);
+  box-shadow: 5px 7px 0 #25243a38;
+}
+.menu-footer {
+  color: var(--pop-ink);
+  font-weight: 700;
+}
+.hud {
+  color: var(--pop-paper);
+  background: #25243af5;
+  border: 1px solid #fff9e960;
+  border-bottom: 3px solid var(--pop-accent);
+  box-shadow:
+    0 7px 0 #25243a38,
+    0 12px 28px #25243a2b;
+  backdrop-filter: blur(8px);
+}
+.shift .eyebrow,
+.stat small,
+.stat em {
+  color: #ddd9c9;
+}
+.stat {
+  border-left-color: #fff9e94d;
+}
+.combo strong {
+  color: var(--pop-accent);
+}
+.icon-button {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+.ticket,
+.queue-pill,
+.orders-toggle {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 1px solid #25243a30;
+  border-bottom: 4px solid var(--pop-accent);
+  box-shadow: 0 4px 0 #25243a26;
+}
+.ticket small,
+.ticket-time {
+  color: #555269;
+}
+.patience {
+  background: #d9d4c1;
+}
+.station-label {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 2px solid var(--pop-cabinet);
+  box-shadow: 0 3px 0 #25243a36;
+}
+.station-label[data-component-source='true'],
+.station-label[data-component-source='true'][data-context='idle'] {
+  border-color: var(--pop-accent);
+  background: #fff9e9f5;
+}
+.station-label[data-context='idle'] {
+  opacity: 0.7;
+}
+.station-label[data-context='nearby'],
+.station-label[data-context='priority'],
+.station-label.station-nearby,
+.station-label.station-target {
+  border-color: var(--pop-secondary);
+  background: var(--pop-accent);
+  color: var(--pop-ink);
+}
+.station-label small {
+  color: #4d4b60;
+}
+.station-ready {
+  background: #9fe1b0;
+  border-color: var(--pop-success);
+}
+.station-burnt,
+.station-label[data-feedback='burn-soon'] {
+  background: #ff9b70;
+  border-color: var(--pop-danger);
+}
+.help-card,
+.bottom-bar,
+.team-roster .teammate,
+.team-signals span {
+  color: var(--pop-ink);
+  background: #fff9e9f2;
+  border: 1px solid #25243a33;
+  box-shadow: 0 4px 0 #25243a22;
+}
+.help-card p,
+.hand small,
+.teammate small {
+  color: #555269;
+}
+.hand-icon {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+.game-tools button,
+.team-social button {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 1px solid #25243a38;
+  box-shadow: 0 3px 0 #25243a26;
+}
+.team-social [aria-pressed='true'],
+.station-ping {
+  background: var(--pop-accent);
+  outline-color: var(--pop-secondary);
+}
+.dialog,
+.notebook,
+.settings-dialog,
+.account-panel,
+.lobby-panel {
+  color: var(--pop-ink);
+  background: var(--pop-paper);
+  border: 2px solid var(--pop-cabinet);
+  box-shadow:
+    0 8px 0 #25243a28,
+    0 25px 70px #25243a36;
+}
+.dialog-symbol,
+.result-stars {
+  color: var(--pop-secondary);
+}
+.result-grid div {
+  color: var(--pop-ink);
+  background: #f1dfb5;
+}
+.campaign-select select,
+.multiplayer-setup select,
+.join-code input {
+  color: var(--pop-ink);
+  background: #fffdf4;
+  border: 2px solid var(--pop-cabinet);
+}
+.recipe-tabs .recipe-tab[aria-pressed='true'] {
+  color: var(--pop-ink);
+  background: var(--pop-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary:active {
+    transform: none;
   }
 }

@@ -9,6 +9,24 @@ import {
 import { customerUrgent, stationFeedback, FeedbackCues } from '../apps/client/src/feedback';
 import { Game } from '../apps/server/src/simulation/game';
 import { parsePreferences } from '../apps/client/src/preferences';
+import { pickTouchStation } from '../apps/client/src/touch-picking';
+
+describe('forgiving mobile station picking', () => {
+  const targets = [
+    { id: 'stove', x: 120, y: 240 },
+    { id: 'board', x: 198, y: 240 },
+  ];
+
+  it('selects the closest work surface when a finger lands beside its center', () => {
+    expect(pickTouchStation(149, 256, targets)).toBe('stove');
+    expect(pickTouchStation(174, 240, targets)).toBe('board');
+  });
+
+  it('does not turn ordinary floor taps into station interactions', () => {
+    expect(pickTouchStation(161, 300, targets)).toBeNull();
+    expect(pickTouchStation(Number.NaN, 240, targets)).toBeNull();
+  });
+});
 
 describe('joystick intents', () => {
   it('quantizes all eight directions, rejects invalid input and has a neutral dead zone', () => {

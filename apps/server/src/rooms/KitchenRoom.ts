@@ -2,7 +2,9 @@ import { Room, type AuthContext, type Client } from '@colyseus/core';
 import { schema, t } from '@colyseus/schema';
 import { Game } from '../simulation/game';
 import { parseIntent } from './protocol';
-import { accountsConfigured, canPlayLevel, persistMatch } from '../persistence/account-store';
+import { canPlayLevel, touchLastPlayed } from '../persistence/account-store';
+import { authEnabled, cloudSaveEnabled } from '../persistence/database';
+import { submitMatch } from '../persistence/match-persistence';
 import { principalFromCookie } from '../persistence/account-routes';
 import type { Result } from '../../../../packages/shared/src/types';
 
@@ -15,13 +17,19 @@ export class KitchenRoom extends Room<{ state: KitchenState }> {
   private playerByClient = new Map<string, string>();
   private persistedMatchId = '';
   private countdownUntil = 0;
+  private joined = false;
   async onAuth(_client: Client, options: { levelId?: string }, context: AuthContext) {
-    if (!accountsConfigured) return { playerId: null };
-    const principal = await principalFromCookie(context.headers.get('cookie') ?? undefined);
-    if (!principal) throw new Error('authenticationRequired');
+    if (!authEnabled && !cloudSaveEnabled) return { playerId: null };
+    const principal = await principalFromCookie(context.headers.get('cookie') ?? undefined).catch(
+      () => null,
+    );
     const requested = options?.levelId ?? 'little-sun-01';
-    if (!(await canPlayLevel(principal.id, requested))) throw new Error('levelLocked');
-    return { playerId: principal.id };
+    if (principal && cloudSaveEnabled) {
+      const unlocked = await canPlayLevel(principal.id, requested).catch(() => true);
+      if (!unlocked) throw new Error('levelLocked');
+    }
+    if (principal) await touchLastPlayed(principal.id).catch(() => undefined);
+    return { playerId: principal?.id ?? null };
   }
   onCreate(options: { levelId?: string } = {}) {
     this.game = new Game({ id: options.levelId }, this.roomId);
@@ -37,7 +45,10 @@ export class KitchenRoom extends Room<{ state: KitchenState }> {
       }
     });
     this.setTimestep((dt) => {
-      if (Date.now() >= this.countdownUntil) this.game.tick(Math.min(dt / 1000, 0.25));
+      // Matchmaking creates the room before its reserved WebSocket seat is joined.
+      // Network/authentication delays must not consume the player's shift.
+      if (this.joined && Date.now() >= this.countdownUntil)
+        this.game.tick(Math.min(dt / 1000, 0.25));
       this.sync();
     }, 50);
   }
@@ -57,16 +68,14 @@ export class KitchenRoom extends Room<{ state: KitchenState }> {
     });
     const result = this.game.state.result;
     if (result && result.matchId !== this.persistedMatchId && this.playerByClient.size) {
+      submitMatch(result as Result, [...this.playerByClient.values()]);
       this.persistedMatchId = result.matchId;
-      void persistMatch(result as Result, [...this.playerByClient.values()]).catch((error) => {
-        this.persistedMatchId = '';
-        console.error('Could not persist Solo result', error);
-      });
     }
   }
   onJoin(client: Client, _options: unknown, auth?: { playerId: string | null }) {
     this.countdownUntil = Date.now() + 3000;
     this.game.addChef(client.sessionId);
+    this.joined = true;
     if (auth?.playerId) this.playerByClient.set(client.sessionId, auth.playerId);
     this.sync();
   }

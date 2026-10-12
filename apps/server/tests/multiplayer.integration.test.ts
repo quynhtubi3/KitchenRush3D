@@ -1,10 +1,11 @@
 import { beforeAll, afterAll, afterEach, describe, it, expect } from 'vitest';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { Server } from '@colyseus/core';
+import { Server, matchMaker } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { Client, type Room } from '@colyseus/sdk';
 import { CoopRoom } from '../src/rooms/CoopRoom';
+import { KitchenRoom } from '../src/rooms/KitchenRoom';
 import type { Snapshot } from '../../../packages/shared/src/types';
 
 const http = createServer();
@@ -20,8 +21,8 @@ async function track(p: Promise<Room>) {
   await wait(() => !!r.state?.snapshot);
   return r;
 }
-async function createPair() {
-  const a = await track(new Client(endpoint).create('coop_private', { teamSize: 4 }));
+async function createPair(levelId = 'little-sun-01') {
+  const a = await track(new Client(endpoint).create('coop_private', { teamSize: 4, levelId }));
   const b = await track(new Client(endpoint).joinById(a.roomId));
   await wait(() => snapshot(a).session!.members.length === 2);
   a.send('intent', { type: 'ready', ready: true });
@@ -46,6 +47,7 @@ beforeAll(async () => {
     transport: new WebSocketTransport({ server: http, maxPayload: 4096 }),
   });
   server.define('coop_private', CoopRoom);
+  server.define('solo', KitchenRoom);
   server.define('coop_public', CoopRoom).filterBy(['teamSize', 'levelId']);
   await server.listen(0, '127.0.0.1');
   endpoint = `http://127.0.0.1:${(http.address() as AddressInfo).port}`;
@@ -62,6 +64,81 @@ afterAll(async () => {
   await server.gracefullyShutdown(false);
 });
 describe('real Colyseus clients', () => {
+  it('synchronizes a selected variant and preserves a carried partial plate through reconnect', async () => {
+    const [a, b] = await createPair('little-sun-10');
+    a.send('intent', { type: 'selectRecipe', recipe: 'sunshine-cheeseburger' });
+    await wait(() => snapshot(b).chefs[a.sessionId]?.preferredRecipe === 'sunshine-cheeseburger');
+    await act(a, 'rack');
+    await act(a, 'assembly');
+    await act(a, 'bun');
+    await act(a, 'assembly');
+    await wait(
+      () =>
+        snapshot(b).stations.find((station) => station.id === 'assembly')?.item?.assemblyRecipe ===
+        'sunshine-cheeseburger',
+    );
+    await act(b, 'meat');
+    const ingredientId = hand(b)!.id;
+    b.send('intent', { type: 'interact', station: 'assembly' });
+    const assembly = snapshot(b).stations.find((station) => station.id === 'assembly')!;
+    await wait(
+      () =>
+        !snapshot(b).chefs[b.sessionId].target &&
+        Math.hypot(
+          snapshot(b).chefs[b.sessionId].x - assembly.x,
+          snapshot(b).chefs[b.sessionId].z - assembly.z,
+        ) <= 1.05,
+    );
+    expect(hand(b)?.id).toBe(ingredientId);
+    await act(a, 'assembly');
+    const plate = hand(a)!;
+    expect(plate.assemblyRecipe).toBe('sunshine-cheeseburger');
+    const firstOrder = snapshot(a).customers[0];
+    const token = a.reconnectionToken;
+    a.reconnection.enabled = false;
+    a.connection.close();
+    await wait(() => !snapshot(b).chefs[a.sessionId].connected);
+    const restored = await track(new Client(endpoint).reconnect(token));
+    await wait(() => snapshot(b).chefs[restored.sessionId].connected);
+    expect(hand(restored)).toEqual(plate);
+    expect(snapshot(b).chefs[restored.sessionId].item).toEqual(plate);
+    expect(snapshot(restored).levelId).toBe('little-sun-10');
+    expect(
+      snapshot(restored).customers.find((customer) => customer.id === firstOrder.id)?.recipe,
+    ).toBe(firstOrder.recipe);
+  });
+  it('preserves the full Solo shift during delayed seat consumption and countdown', async () => {
+    const reservation = await matchMaker.create('solo', { levelId: 'little-sun-01' });
+    const pending = matchMaker.getLocalRoomById(reservation.roomId) as KitchenRoom;
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    const before = JSON.parse(pending.state.snapshot) as Snapshot;
+    expect(Object.keys(before.chefs)).toHaveLength(0);
+    expect(before.elapsed).toBe(0);
+    expect(before.remaining).toBe(180);
+    const a = await track(new Client(endpoint).consumeSeatReservation(reservation));
+    expect(snapshot(a).countdown).toBeGreaterThan(0);
+    a.send('intent', { type: 'interact', station: 'bun' });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(snapshot(a).remaining).toBe(180);
+    expect(hand(a)).toBeNull();
+    await wait(() => !snapshot(a).countdown && snapshot(a).remaining < 180);
+    await act(a, 'rack');
+    const held = hand(a)!;
+    const token = a.reconnectionToken;
+    a.reconnection.enabled = false;
+    a.connection.close();
+    await wait(() => JSON.parse(pending.state.snapshot).phase === 'paused');
+    const paused = JSON.parse(pending.state.snapshot).remaining;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(JSON.parse(pending.state.snapshot).remaining).toBe(paused);
+    const restored = await track(new Client(endpoint).reconnect(token));
+    expect(restored.sessionId).toBe(a.sessionId);
+    expect(hand(restored)?.id).toBe(held.id);
+    expect(snapshot(restored).countdown).toBe(0);
+    await wait(() => snapshot(restored).remaining < paused);
+    await restored.leave();
+    await wait(() => !matchMaker.getLocalRoomById(restored.roomId));
+  });
   it('synchronizes preparation countdown without consuming match time or items', async () => {
     const a = await track(new Client(endpoint).create('coop_private', { teamSize: 2 }));
     const b = await track(new Client(endpoint).joinById(a.roomId));
@@ -76,6 +153,139 @@ describe('real Colyseus clients', () => {
     expect(snapshot(a).remaining).toBe(time);
     expect(hand(a)).toBeNull();
     await wait(() => !snapshot(a).countdown && snapshot(a).remaining < time);
+  });
+  it('continues a winning crew through the same room and keeps its members and streak', async () => {
+    const [host, teammate] = await createPair('little-sun-01');
+    const roomId = host.roomId;
+    const internal = matchMaker.getLocalRoomById(roomId) as unknown as {
+      session: {
+        game: {
+          matchId: string;
+          state: {
+            phase: Snapshot['phase'];
+            result: NonNullable<Snapshot['result']> | null;
+          };
+        };
+      };
+    };
+    const firstMatchId = internal.session.game.matchId;
+    internal.session.game.state.phase = 'finished';
+    internal.session.game.state.result = {
+      levelId: 'little-sun-01',
+      teamSize: 2,
+      won: true,
+      stars: 2,
+      score: 500,
+      served: 3,
+      missed: 0,
+      bestCombo: 2,
+      averageService: 20,
+      duration: 180,
+      matchId: 'integration-team-win',
+    };
+    await wait(() => snapshot(host).result?.matchId === 'integration-team-win');
+    await wait(() => snapshot(host).session!.teamStreak === 1);
+
+    teammate.send('intent', { type: 'continue', levelId: 'little-sun-02' });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(snapshot(host).phase).toBe('finished');
+
+    host.send('intent', { type: 'continue', levelId: 'orbit-10' });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(snapshot(host).phase).toBe('finished');
+
+    host.send('intent', { type: 'continue', levelId: 'little-sun-02' });
+    await wait(() =>
+      [host, teammate].every(
+        (client) =>
+          snapshot(client).phase === 'lobby' && snapshot(client).levelId === 'little-sun-02',
+      ),
+    );
+    expect(host.roomId).toBe(roomId);
+    expect(teammate.roomId).toBe(roomId);
+    expect(snapshot(host).result).toBeNull();
+    expect(snapshot(host).session!.teamStreak).toBe(1);
+    expect(internal.session.game.matchId).not.toBe(firstMatchId);
+    expect(
+      snapshot(host)
+        .session!.members.map((m) => m.id)
+        .sort(),
+    ).toEqual([host.sessionId, teammate.sessionId].sort());
+
+    const lateFriend = await track(new Client(endpoint).joinById(roomId));
+    await wait(() => snapshot(host).session!.members.length === 3);
+    host.send('intent', { type: 'ready', ready: true });
+    teammate.send('intent', { type: 'ready', ready: true });
+    lateFriend.send('intent', { type: 'ready', ready: true });
+    await wait(() => snapshot(host).session!.members.every((member) => member.ready));
+    host.send('intent', { type: 'start' });
+    await wait(() =>
+      [host, teammate, lateFriend].every((client) => snapshot(client).phase === 'playing'),
+    );
+    expect(snapshot(host).session!.startedSize).toBe(3);
+    expect(snapshot(host).levelId).toBe('little-sun-02');
+    await expect(new Client(endpoint).joinById(roomId)).rejects.toThrow();
+  });
+  it('lets a public crew continue with the connected group after one player leaves', async () => {
+    const crew = [
+      await track(
+        new Client(endpoint).joinOrCreate('coop_public', {
+          teamSize: 3,
+          levelId: 'little-sun-01',
+        }),
+      ),
+      await track(
+        new Client(endpoint).joinOrCreate('coop_public', {
+          teamSize: 3,
+          levelId: 'little-sun-01',
+        }),
+      ),
+      await track(
+        new Client(endpoint).joinOrCreate('coop_public', {
+          teamSize: 3,
+          levelId: 'little-sun-01',
+        }),
+      ),
+    ];
+    for (const client of crew) client.send('intent', { type: 'ready', ready: true });
+    await wait(() => crew.every((client) => snapshot(client).phase === 'playing'));
+    await wait(() => !snapshot(crew[0]!).countdown);
+
+    const internal = matchMaker.getLocalRoomById(crew[0]!.roomId) as unknown as {
+      session: {
+        game: {
+          state: {
+            phase: Snapshot['phase'];
+            result: NonNullable<Snapshot['result']> | null;
+          };
+        };
+      };
+    };
+    internal.session.game.state.phase = 'finished';
+    internal.session.game.state.result = {
+      levelId: 'little-sun-01',
+      teamSize: 3,
+      won: true,
+      stars: 1,
+      score: 500,
+      served: 3,
+      missed: 0,
+      bestCombo: 1,
+      averageService: 20,
+      duration: 180,
+      matchId: 'integration-public-win',
+    };
+    await wait(() => snapshot(crew[0]!).result?.matchId === 'integration-public-win');
+    crew[0]!.send('intent', { type: 'continue', levelId: 'little-sun-02' });
+    await wait(() => crew.every((client) => snapshot(client).phase === 'lobby'));
+
+    await crew[2]!.leave();
+    await wait(() => snapshot(crew[0]!).session!.members.length === 2);
+    crew[0]!.send('intent', { type: 'ready', ready: true });
+    crew[1]!.send('intent', { type: 'ready', ready: true });
+    await wait(() => [crew[0]!, crew[1]!].every((client) => snapshot(client).phase === 'playing'));
+    expect(snapshot(crew[0]!).session!.startedSize).toBe(2);
+    expect(snapshot(crew[0]!).levelId).toBe('little-sun-02');
   });
   it('matches by level as well as team size and synchronizes a non-default kitchen', async () => {
     const a = await track(
@@ -149,6 +359,36 @@ describe('real Colyseus clients', () => {
         (i) => i?.id === item.id,
       ),
     ).toHaveLength(1);
+  });
+  it('lets a teammate add freshly chopped lettuce to a shared plate in campaign level 3', async () => {
+    const [prepChef, platingChef] = await createPair('little-sun-03');
+    prepChef.send('intent', { type: 'selectRecipe', recipe: 'sunshine-chicken-burger' });
+    await wait(
+      () =>
+        snapshot(platingChef).chefs[prepChef.sessionId]?.preferredRecipe ===
+        'sunshine-chicken-burger',
+    );
+
+    await act(platingChef, 'rack');
+    await act(platingChef, 'assembly');
+    await act(prepChef, 'lettuce');
+    await act(prepChef, 'board');
+    for (let tap = 0; tap < 3; tap++) await act(prepChef, 'board');
+    await wait(
+      () => snapshot(platingChef).stations.find((s) => s.id === 'board')?.phase === 'ready',
+    );
+    await act(prepChef, 'board');
+    expect(hand(prepChef)?.kind).toBe('choppedLettuce');
+
+    await act(prepChef, 'assembly');
+    await wait(() => {
+      const plate = snapshot(platingChef).stations.find((s) => s.id === 'assembly')?.item;
+      return plate?.parts.includes('choppedLettuce') ?? false;
+    });
+    const sharedPlate = snapshot(platingChef).stations.find((s) => s.id === 'assembly')!.item!;
+    expect(sharedPlate.assemblyRecipe).toBe('sunshine-chicken-burger');
+    expect(sharedPlate.parts).toContain('choppedLettuce');
+    expect(hand(prepChef)).toBeNull();
   });
   it('serializes simultaneous occupied-counter deposits and stove starts', async () => {
     const [a, b] = await createPair();

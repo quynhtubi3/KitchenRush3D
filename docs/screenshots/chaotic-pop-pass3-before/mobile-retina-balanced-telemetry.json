@@ -1,0 +1,26 @@
+{
+  "css": [390, 608],
+  "buffer": [780, 1216],
+  "dpr": 3,
+  "hardwareScalingLevel": 0.5,
+  "effectiveScale": 2,
+  "profile": "balanced",
+  "sharpness": "auto",
+  "fps": 2.8823981468136233,
+  "targetFps": 30,
+  "shadowMapSize": 512,
+  "shadowMode": "poisson",
+  "renderedFrames": 37,
+  "shadowRenderedFrames": 30,
+  "faces": ["neutral:false", "neutral:false"],
+  "frameMs": 548.6999998092651,
+  "frameMean": 346.93333435058594,
+  "frameP95": 976,
+  "frameP99": 1035.9000244140625,
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "zoom": 1.82
+}

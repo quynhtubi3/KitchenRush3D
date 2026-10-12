@@ -1,0 +1,55 @@
+# Chaotic Pop Pass 2 — implementation and verification
+
+2026-10-12. Client presentation only. All existing Account/SMTP/PostgreSQL, campaign data, 25 recipe graphs, 50 station layouts, balance, collision, server simulation and multiplayer protocol are preserved. The user's server/tunnel is not restarted; browser tests run on the isolated Guest server at port 2570 without player database credentials.
+
+Read-only hosting check: the existing Node process (PID 20000, started 14:45) still listens on 127.0.0.1:2568; GET `/` returned 200 and its game asset filename matches the new built `apps/client/dist/index.html`. No process restart, tunnel change or account/database operation was performed. Reloading the browser page obtains the new render bundle; this localhost check does not certify an external Cloudflare/Safari session.
+
+## Implemented
+
+- One authored cached ceramic/stone/panel texture per restaurant, with broad tiles, clear seams, subtle edge/value treatment and restrained perimeter patterns.
+- Shared original eight-mood face atlas and curved face mesh, larger head/hands/feet, wider apron and asymmetric toque. Customer moods/posture use confirmed state; customer head proportions derive from stable ID variants.
+- Larger heat dial/pointer, cutting-board grip, sink taps, counter pulls and dispenser lip, merged with static material groups. Station roots, dimensions used for interaction and IDs are unchanged.
+- Follow-up to the user's floating chopping-table report: open-table legs previously ended 0.05 units above the floor and were excluded by the tiny-shadow-caster filter. Supports now meet the floor and their merged material group casts a connected shadow. All board/sink/rack/counter feet receive one room-wide vertex-alpha contact batch, shared material and no added texture. Low retains these foot contacts when map shadows are off. This adds one draw call and 64 triangles per open table, plus a shadow draw for a support material group where it was previously omitted; the final counters include that deliberate grounding cost.
+- Larger burger crown, less oversized lettuce, thicker cheddar with two folded corners. Food meshes are merged by material and do not cast detailed moving shadows. Existing 25 recipes keep their models; regional silhouettes remain shared and need differentiation.
+- Two food mascot plaques per room: stack, fish, tomato, wok and space food. Existing screens/bamboo, arches/plants, lantern/eaves and portholes/planets remain the other theme cues. Plaques use one original raster texture/material per room, are unlit/readable and cannot intercept input. The standard plane texture uses Y-flipped canvas upload, separately from the custom face UV convention; this corrects the inverted graphic discovered in the Retina review.
+- Comic completion bursts replace one existing pooled steam slot, not extra particle objects. Pool budget: Low 6, touch Balanced/High 12, desktop 24; Reduced Motion 0.
+- Render cadence: touch Balanced 30 FPS, Low 24, High 60; desktop gameplay 60; lobby/pause/result/menu 15. Hidden document stops the loop; resume resets timing. Interpolation/pose dt uses the actual rendered-frame interval, avoiding slow animation after frame capping. Retina resolution calculation remains unchanged.
+- Touch Balanced uses a 512px Poisson shadow map refreshed at 10 Hz instead of continuously blurred 768px shadows. High/desktop retain 768px blurred shadows; Low keeps contact ellipses without map shadows. Bias controls reduce the acne found in the first mobile capture.
+- Shadow cadence only changes `refreshRate` when its value changes: Babylon's setter resets the render counter on every assignment. A regression test uses the real Babylon render target counter to ensure the 10 Hz policy is effective. Diagnostics also count actual shadow-map renders and sample mean draw calls, rather than relying on the configured profile alone.
+- Reused movement vectors and in-place interpolation reduce frame allocations. Diagnostics report actual submitted-frame interval/FPS, target FPS, shadow mode/size and render count locally; no telemetry upload or temperature sensor claim.
+- Disabled `preserveDrawingBuffer` and the unused stencil buffer. The unchanged pixel-diversity E2E assertions now read synchronously through a one-shot after-render diagnostic callback. This avoids paying for permanent buffer preservation in gameplay; the [WebGL specification](https://registry.khronos.org/webgl/specs/latest/1.0/#2.2) recommends this approach and notes that preservation can cost performance on some platforms. No percentage power saving is claimed.
+- Separate `art-study.html` renders the actual runtime kit without server/synthetic snapshots. It is an offline inspection page, not evidence of completing a match. Vite builds game and study as separate entries sharing Babylon code.
+
+## Verification record — completed
+
+Baseline production captures: **13/13 passed**. Initial Little Sun slice: **2/2 passed**, then reviewed and corrected. Intermediate targeted production set: **15/15 passed** (five venue desktop/mobile captures, three asset studies, Retina/profile/visibility lifecycle, Reduced Motion/pooling). Focused unit/render checks: **16/16 passed** after fixing the Node NullEngine canvas limitation for poster generation.
+
+The first full unit attempt found that canvas-backed posters cannot be rasterized in Node's NullEngine. The browser-only poster path now skips raster work when neither document nor OffscreenCanvas exists; actual browser captures verify those textures. Final full unit run after the table-grounding change: **399 passed, 11 database-dependent skipped** in 29 passing files/2 skipped files (186.26s). Build/typecheck passed with the existing Babylon chunk-size warning. The shadow cadence regression uses Babylon's actual render target counter. The grounding regression checks all 50 layouts, floor height/footprint, non-pickable geometry, unchanged station data and material/texture reuse across rebuilding. Focused grounding/art/cadence unit tests passed **14/14**, and final Little Sun desktop/mobile plus Retina/lifecycle targeted E2E passed **3/3**.
+
+Four production E2E attempts were intentionally interrupted during campaign coverage: to add buffer optimization, fix draw-call sampling, fix animation dt, and correct inverted poster UVs found in the Retina screenshot. None is a completed suite result. The final source also includes the user's table-foot fix. One new targeted assertion initially read faces in the first playing telemetry before pose update; it now polls for the same expected neutral state, without relaxing the requirement or extending timeouts. The corrected asset/Retina targeted set passed **4/4**. The fresh **entire production E2E** run completed **67 passed, 1 skipped, 0 failed in 47.7 minutes**. The skipped Account browser test requires an isolated database; Guest testing did not use player database credentials. All ten visual slices passed within this same run, resolving the earlier Pass 1 verification gap. Format check and `git diff --check` passed; line-ending conversion notices are not whitespace errors.
+
+Campaign browser coverage selects/checks all 50 menu entries and cooks/serves a real dish on the first level of each of the five restaurants. It does **not** play every one of the 50 levels through to browser victory; campaign simulation tests provide that completion coverage. The four-player screenshot uses one browser and three actual Colyseus SDK peers; separate Multiplayer E2E cases use two browser clients for cooperation/reconnect. Offline art sheets are not gameplay evidence.
+
+## Workload and download budget
+
+The new game HTML entry plus its 43 preloaded JS dependencies totals **1,814,559 bytes**, approximately **495,742 gzip bytes** when each file is compressed independently. This is the initial JS/preload graph, not just the smaller game entry chunk and not the entire downloaded session: lazy shader/glTF chunks, CSS, fonts and audio are separate. The two-entry game/study build shares Babylon dependencies and emits more preload files. The old single-entry size (~1.31 MB) is not a like-for-like total-network baseline; no bundle reduction is claimed. The large shared Babylon chunk warning remains, and lazy-loading/reducing those dependencies is still needed for slower mobile connections.
+
+Scene counters and estimated buffers are recorded from matching first levels, overview camera, Balanced and Reduced Motion. They are workload comparisons, not accurate VRAM accounting or temperature measurements. A snapshot's draw count depends on whether its shadow target refreshed; the new mean samples that variation over the last 240 submitted frames, including initialization/loading until those samples roll out. SwiftShader gameplay runs below 10 FPS and cannot establish the 30-FPS device cadence benefit. The Babylon counter unit test checks that policy independently.
+
+Final mobile captures from the full run (before → after):
+
+| Venue      | Meshes    | Active meshes | Triangles       | Materials | Texture estimate bytes | Shadow casters |
+| ---------- | --------- | ------------- | --------------- | --------- | ---------------------- | -------------- |
+| Little Sun | 260 → 251 | 202 → 197     | 111948 → 103576 | 136 → 134 | 11135062 → 7561386     | 111 → 112      |
+| Tide       | 239 → 230 | 181 → 176     | 96654 → 88282   | 155 → 153 | 11244015 → 7670339     | 94 → 98        |
+| Olive      | 244 → 235 | 186 → 181     | 108490 → 100118 | 160 → 158 | 11244015 → 7670339     | 99 → 102       |
+| Lantern    | 238 → 229 | 180 → 175     | 101130 → 92758  | 152 → 150 | 11244015 → 7670339     | 96 → 100       |
+| Orbit      | 247 → 236 | 189 → 182     | 102426 → 94054  | 161 → 159 | 11244015 → 7670339     | 99 → 102       |
+
+Little Sun's instantaneous draw count is 313 → 308; other final captures report 175–284 depending on shadow refresh, so they are not a fixed like-for-like draw reduction. New mean draws are about 183–199 but include startup frames and must not be presented as a steady-state benchmark. The deliberately restored support shadows add casters while food/face batching removes other work. Full stats remain beside every capture.
+
+## iPhone verification still required
+
+Open the new build on iPhone 13/14 Pro Max. Select Balanced + Retina balanced, enable Render diagnostics, and play the same busy four-person shift for 10–15 minutes. Expect `targetFps:30`, `effectiveScale` about 2, `shadowMapSize:512`, `shadowMode:poisson`; compare heat, touch response, sustained FPS and sharpness against the earlier build at equal brightness. Repeat orientation changes, lock/unlock, reconnect, Low and High. High costs more GPU work; use Balanced as the default comparison.
+
+No real iPhone/Safari session, GPU power trace, temperature measurement or battery test was available. SwiftShader scene counters are workload proxies only. The patch reduces submitted workload, but **does not certify that the phone no longer gets hot**.

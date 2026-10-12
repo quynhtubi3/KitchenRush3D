@@ -26,4 +26,6 @@ it('bounds effects and disables motion effects with Reduced Motion', () => {
   expect(effectBudget(true, false)).toBe(6);
   expect(effectBudget(false, true)).toBe(0);
   expect(effectBudget(true, true)).toBe(0);
+  expect(effectBudget(false, false, true)).toBe(12);
+  expect(effectBudget(true, false, true)).toBe(6);
 });

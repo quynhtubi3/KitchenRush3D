@@ -1,4 +1,23 @@
 import { renderResolution } from './render-resolution';
+import { restaurantGraphics } from './restaurant-graphics';
+import { RenderCadence, ShadowCadence, renderFrameRate } from './render-cadence';
+import { isOpenWorktable, openTableSupport, stationContacts } from './station-grounding';
+import {
+  characterArtContract,
+  materialArchetypes,
+  restaurantLighting,
+  surfaceFamily,
+  visualGroundY,
+} from './world-art';
+import type { RenderTargetTexture } from '@babylonjs/core/Materials/Textures/renderTargetTexture';
+import {
+  chefExpression,
+  faceExpressions,
+  faceUVs,
+  paintFaceAtlas,
+  type FaceExpression,
+} from './character-face';
+import { VertexBuffer } from '@babylonjs/core/Buffers/buffer';
 import { Presentation, effectBudget } from './presentation';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
@@ -13,16 +32,19 @@ import { PBRMaterial } from '@babylonjs/core/Materials/PBR/pbrMaterial';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imageProcessingConfiguration';
 import { roundedGeometry, copyGeometry } from './rounded-geometry';
+import { blinkAmount, customerAppearance } from './character-style';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator';
 import { SceneInstrumentation } from '@babylonjs/core/Instrumentation/sceneInstrumentation';
 import { ModelAssetLibrary } from './model-assets';
+import { pickTouchStation } from '../touch-picking';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import '@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent';
 import '@babylonjs/core/Culling/ray';
 import { stations } from '../../../../packages/content/src/index';
-import { getLevel, items, dishRecipe } from '../../../../packages/content/src/campaign';
+import { popCore } from './chaotic-pop-theme';
+import { getLevel, items, dishRecipe, recipes } from '../../../../packages/content/src/campaign';
 import type { Snapshot, Item, Point } from '../../../../packages/shared/src/types';
 import { chefColors } from '../multiplayer-ui';
 import type { Preferences } from '../preferences';
@@ -32,6 +54,7 @@ import {
   dressStation,
   cuisineFood,
   sharedFloorMaterials,
+  floorMaterial,
 } from './restaurant-art';
 import {
   cylinderSegments,
@@ -46,23 +69,24 @@ import {
   cameraTarget,
   type CameraFrame,
 } from './camera-layout';
+import { RestaurantCat } from './restaurant-cat';
 
 const basePalette = {
-  cream: '#fff3dc',
-  teal: '#356f65',
-  dark: '#1d4642',
-  wood: '#bd7950',
-  pink: '#df8068',
-  gold: '#edb64f',
-  steel: '#77969a',
-  white: '#fffaf0',
-  green: '#659b4b',
-  brown: '#713c2c',
-  blush: '#f6c6a0',
-  mint: '#acd0bf',
-  tile: '#f2e4ca',
-  grout: '#d7c6a8',
-  ink: '#234c45',
+  cream: popCore.cream,
+  teal: popCore.teal,
+  dark: popCore.ink,
+  wood: '#B95B3E',
+  pink: popCore.chili,
+  gold: popCore.mustard,
+  steel: '#526F89',
+  white: popCore.paper,
+  green: '#5DAB50',
+  brown: popCore.cocoa,
+  blush: '#F7AA8B',
+  mint: popCore.mint,
+  tile: '#F5E8C9',
+  grout: '#A99A78',
+  ink: popCore.ink,
 };
 
 const palette = basePalette;
@@ -76,6 +100,10 @@ type CharacterRig = {
   rightArm: TransformNode;
   leftLeg: TransformNode;
   rightLeg: TransformNode;
+  face: Mesh;
+  faceKey: string;
+  blinkOffset: number;
+  slots: Record<'hat' | 'hair' | 'apron', TransformNode>;
 };
 export class KitchenScene {
   readonly engine: Engine;
@@ -99,10 +127,46 @@ export class KitchenScene {
   private instrumentation: SceneInstrumentation;
   private readonly listeners = new AbortController();
   private readonly resizeObserver: ResizeObserver;
+  private readonly cadence = new RenderCadence();
+  private frameDeltaMs = 16.67;
+  private renderTargetFps = 30;
+  private readonly shadowCadence = new ShadowCadence();
+  private observedShadowMap: RenderTargetTexture | null = null;
+  private shadowRenderedFrames = 0;
+  private renderedFrames = 0;
+  private sceneBuildAt = 0;
+  private sceneBuildMs = 0;
+  private sceneReadyMs: number | null = null;
+  private readonly touchDevice =
+    navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+  private readonly movementTarget = new Vector3();
   private readonly renderFrame = () => {
-    this.animate();
-    this.scene.render();
     const now = performance.now();
+    const touch = this.touchDevice;
+    this.renderTargetFps = renderFrameRate(
+      touch,
+      this.quality ?? 'standard',
+      this.state?.phase === 'playing',
+    );
+    const dt = this.cadence.step(now, this.renderTargetFps, document.hidden);
+    if (dt === null) return;
+    this.frameDeltaMs = dt;
+    this.animate();
+    // Balanced touch shadows update at 10 Hz rather than every display refresh.
+    const map = this.shadows.getShadowMap();
+    if (map && this.scene.shadowsEnabled) {
+      if (map !== this.observedShadowMap) {
+        this.observedShadowMap = map;
+        map.onAfterRenderObservable.add(() => this.shadowRenderedFrames++);
+      }
+      this.shadowCadence.update(map, now, touch && this.quality !== 'high');
+    }
+    this.scene.render();
+    if (this.sceneReadyMs === null && this.scene.isReady())
+      this.sceneReadyMs = performance.now() - this.sceneBuildAt;
+    this.drawSamples[(this.frameIndex + this.drawSamples.length - 1) % this.drawSamples.length] =
+      this.instrumentation.drawCallsCounter.current;
+    this.renderedFrames++;
     if (now - this.labelsAt >= 66) {
       this.labelsAt = now;
       this.positionLabels();
@@ -120,6 +184,10 @@ export class KitchenScene {
   >();
   private items = new Map<string, { key: string; node: TransformNode }>();
   private guests = new Map<string, TransformNode>();
+  private guestsFed = new Set<string>();
+  private cat!: RestaurantCat;
+  private catAction!: HTMLButtonElement;
+  private catCanPet = false;
   private marker: Mesh;
   private routeDots: Mesh[] = [];
   private interactionMarker: Mesh;
@@ -138,6 +206,7 @@ export class KitchenScene {
   private renderDebug = false;
   private showAllStationLabels = false;
   private frameSamples = new Float32Array(240);
+  private drawSamples = new Float32Array(240);
   private frameIndex = 0;
   private frameCount = 0;
   private debugPanel = document.createElement('pre');
@@ -149,11 +218,13 @@ export class KitchenScene {
   private labels: { id: string; node: HTMLElement }[] = [];
   onMove: (p: Point) => void = () => {};
   onInteract: (id: string) => void = () => {};
+  onCatPet: () => void = () => {};
+  onCatMeow: () => void = () => {};
   constructor(readonly canvas: HTMLCanvasElement) {
     this.debugPanel.id = 'render-diagnostics';
     this.debugPanel.hidden = true;
     document.body.append(this.debugPanel);
-    this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    this.engine = new Engine(canvas, true, { preserveDrawingBuffer: false, stencil: false });
     this.engine.onContextLostObservable.add(() => {
       this.canvas.dataset.contextState = 'lost';
     });
@@ -162,14 +233,24 @@ export class KitchenScene {
       this.resetCamera();
     });
     this.scene = new Scene(this.engine);
+    // Explicit diagnostic readback in the rendering call; gameplay never reads GPU pixels.
+    // Keeping the drawing buffer alive for a later readback would burden every frame.
+    canvas.addEventListener(
+      'kitchen-read-frame',
+      (event) => {
+        const read = (event as CustomEvent<() => void>).detail;
+        if (typeof read === 'function') this.scene.onAfterRenderObservable.addOnce(read);
+      },
+      { signal: this.listeners.signal },
+    );
     this.modelAssets = new ModelAssetLibrary(this.scene);
     this.instrumentation = new SceneInstrumentation(this.scene);
-    this.scene.clearColor = Color4.FromHexString('#f3ecddff');
+    this.scene.clearColor = Color4.FromHexString('#e8e7f0ff');
     this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
     this.scene.imageProcessingConfiguration.toneMappingType =
       ImageProcessingConfiguration.TONEMAPPING_ACES;
-    this.scene.imageProcessingConfiguration.exposure = 1.0;
-    this.scene.imageProcessingConfiguration.contrast = 1.08;
+    this.scene.imageProcessingConfiguration.exposure = 0.92;
+    this.scene.imageProcessingConfiguration.contrast = 1.14;
     this.camera = new ArcRotateCamera(
       'camera',
       Math.PI / 2,
@@ -182,18 +263,40 @@ export class KitchenScene {
     this.camera.minZ = 0.1;
     this.camera.maxZ = 160;
     const sky = new HemisphericLight('sky', new Vector3(0, 1, 0), this.scene);
-    sky.intensity = 0.58;
-    sky.diffuse = Color3.FromHexString('#fff0d7');
-    sky.groundColor = Color3.FromHexString('#8b9b79');
+    sky.intensity = 0.48;
+    sky.diffuse = Color3.FromHexString('#fff0da');
+    sky.groundColor = Color3.FromHexString('#68667b');
     const sun = new DirectionalLight('sun', new Vector3(-0.5, -1, 0.45), this.scene);
     sun.position = new Vector3(5, 14, -8);
-    sun.intensity = 1.7;
-    sun.diffuse = Color3.FromHexString('#fff4e1');
-    sun.specular = Color3.FromHexString('#fff2db');
+    sun.intensity = 1.35;
+    sun.diffuse = Color3.FromHexString('#fff0ca');
+    sun.specular = Color3.FromHexString('#fff4df');
     this.shadows = new ShadowGenerator(768, sun);
     this.shadows.useBlurExponentialShadowMap = true;
     this.shadows.blurKernel = 12;
     this.buildKitchen();
+    this.cat = new RestaurantCat(this.scene, this.layout);
+    this.cat.onMeow = () => this.onCatMeow();
+    this.catAction = document.createElement('button');
+    this.catAction.type = 'button';
+    this.catAction.className = 'cat-pet-action';
+    this.catAction.hidden = true;
+    this.catAction.addEventListener('pointerdown', (event) => event.stopPropagation(), {
+      signal: this.listeners.signal,
+    });
+    this.catAction.addEventListener(
+      'click',
+      (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const chef = this.state?.chefs[this.playerId];
+        if (!this.catCanPet || this.state?.phase !== 'playing' || !this.cat.isNear(chef)) return;
+        this.cat.pet();
+        this.onCatPet();
+      },
+      { signal: this.listeners.signal },
+    );
+    document.body.append(this.catAction);
     this.chef = this.person('chef', chefColors[0], true).root;
     this.chef.position = this.world({ x: 7, z: 8 });
     this.marker = MeshBuilder.CreateTorus(
@@ -269,11 +372,18 @@ export class KitchenScene {
         ) {
           const rect = canvas.getBoundingClientRect();
           const pick = this.scene.pick(e.clientX - rect.left, e.clientY - rect.top);
-          if (pick?.hit && pick.pickedMesh) {
-            let node: any = pick.pickedMesh;
-            while (node && !node.metadata?.station) node = node.parent;
-            if (node?.metadata?.station) this.onInteract(node.metadata.station);
-            else if (pick.pickedPoint) {
+          const touch = e.pointerType !== 'mouse' || window.matchMedia('(pointer: coarse)').matches;
+          // On touch screens, forgive small finger placement errors against the
+          // projected work surface before a decorative mesh can steal the ray.
+          const touchStation = touch ? this.pickTouchStation(e.clientX, e.clientY, rect) : null;
+          let node: any = pick?.pickedMesh;
+          while (node && !node.metadata?.station) node = node.parent;
+          if (touchStation) {
+            this.onInteract(touchStation);
+          } else if (node?.metadata?.station) {
+            this.onInteract(node.metadata.station);
+          } else {
+            if (pick?.hit && pick.pickedPoint) {
               const p = {
                 x: Math.max(1, Math.min(13, Math.round(pick.pickedPoint.x + 7))),
                 z: Math.max(1, Math.min(9, Math.round(pick.pickedPoint.z + 5))),
@@ -327,6 +437,16 @@ export class KitchenScene {
       },
       { signal: this.listeners.signal },
     );
+    this.engine.renderEvenInBackground = false;
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        this.cadence.reset();
+        if (document.hidden) this.engine.stopRenderLoop(this.renderFrame);
+        else this.engine.runRenderLoop(this.renderFrame);
+      },
+      { signal: this.listeners.signal },
+    );
     this.resetCamera();
     this.engine.runRenderLoop(this.renderFrame);
   }
@@ -334,11 +454,50 @@ export class KitchenScene {
     this.listeners.abort();
     this.resizeObserver.disconnect();
     this.debugPanel.remove();
+    this.catAction.remove();
     this.engine.stopRenderLoop(this.renderFrame);
     this.modelAssets.dispose();
     this.instrumentation.dispose();
     this.scene.dispose();
     this.engine.dispose();
+  }
+  /** Offline art review only. Never called by gameplay; no invented server snapshots. */
+  async renderArtStudy(mode: 'faces' | 'food' | 'customers' | 'equipment') {
+    this.engine.stopRenderLoop(this.renderFrame);
+    this.resizeObserver.disconnect();
+    for (const mesh of [...this.scene.meshes]) mesh.setEnabled(false);
+    this.scene.shadowsEnabled = false;
+    this.camera.beta = mode === 'food' ? 0.4 : mode === 'equipment' ? 0.65 : 1.0;
+    this.camera.target.set(0, 0.95, 0);
+    this.camera.orthoLeft = -7.5;
+    this.camera.orthoRight = 7.5;
+    const studyHeight = (15 * this.canvas.clientHeight) / Math.max(1, this.canvas.clientWidth);
+    this.camera.orthoTop = studyHeight / 2;
+    this.camera.orthoBottom = -studyHeight / 2;
+    if (mode === 'equipment') {
+      this.scene.getMeshByName('hand-laid checker terrazzo')?.setEnabled(true);
+      this.layout = getLevel('little-sun-10').stations;
+      this.buildStations();
+    } else if (mode === 'food') {
+      const kinds = recipes.map(
+        (recipe) => recipe.steps.find((step) => step.station === 'assembly')!.output,
+      );
+      kinds.forEach((kind, i) => {
+        const food = this.food({ id: `study-food-${i}`, kind, parts: [] });
+        food.position.set((2 - (i % 5)) * 1.8, 0.8, (Math.floor(i / 5) - 2) * 1.3);
+      });
+    } else {
+      const moods = mode === 'faces' ? faceExpressions : faceExpressions.slice(0, 4);
+      moods.forEach((mood, i) => {
+        const rig = this.person(`study-${i}`, chefColors[i % 4], mode === 'faces');
+        rig.root.position.set((1.5 - (i % 4)) * 2.8, 0, Math.floor(i / 4) * 6.4 - 3.2);
+        this.animateFace(rig, mood, false);
+      });
+    }
+    this.applyResolution();
+    await this.scene.whenReadyAsync();
+    this.scene.render();
+    this.canvas.dataset.studyReady = mode;
   }
   private pointerDistance() {
     const p = [...this.pointers.values()];
@@ -347,7 +506,7 @@ export class KitchenScene {
   resetCamera() {
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return;
-    const touch = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+    const touch = this.touchDevice;
     // Determine orientation from the device viewport, not the HUD-reserved canvas.
     // A portrait canvas can be nearly square after reserving touch controls.
     const profile = chooseCameraProfile(window.innerWidth, window.innerHeight, touch);
@@ -405,7 +564,20 @@ export class KitchenScene {
     this.showAllStationLabels = preferences.showAllStationLabels;
     this.debugPanel.hidden = !this.renderDebug;
     this.scene.shadowsEnabled = preferences.quality !== 'low';
+    const touch = this.touchDevice;
+    this.shadows.useBlurExponentialShadowMap = !(touch && preferences.quality !== 'high');
+    this.shadows.usePoissonSampling = touch && preferences.quality !== 'high';
+    this.shadows.mapSize = touch && preferences.quality !== 'high' ? 512 : 768;
+    this.shadows.bias = 0.001;
+    this.shadows.normalBias = 0.025;
+    this.cadence.reset();
     this.applyResolution();
+  }
+  setCatPlayerName(displayName: string, language: 'vi' | 'en') {
+    this.catCanPet = displayName.toLocaleLowerCase('vi').includes('hoa');
+    this.catAction.disabled = !this.catCanPet;
+    this.catAction.textContent = language === 'vi' ? '🐾 Nựng Kẹo' : '🐾 Pet Kẹo';
+    this.catAction.setAttribute('aria-label', language === 'vi' ? 'Nựng Kẹo' : 'Pet Kẹo the cat');
   }
   private applyResolution() {
     const rect = this.canvas.getBoundingClientRect();
@@ -434,6 +606,26 @@ export class KitchenScene {
     }
     return this.materials.get(key)!;
   }
+  private surface(
+    name: string,
+    color: string,
+    parent?: TransformNode,
+    roughness = 0.76,
+    metallic = 0.02,
+  ) {
+    let node = parent;
+    let food = false;
+    while (node) {
+      if (node.metadata?.visualFood) {
+        food = true;
+        break;
+      }
+      node = node.parent as TransformNode | undefined;
+    }
+    const family = surfaceFamily(name, food);
+    const finish = family ? materialArchetypes[family] : { roughness, metallic };
+    return this.mat(color, finish.roughness, finish.metallic);
+  }
   private roundedBox(
     name: string,
     w: number,
@@ -457,60 +649,16 @@ export class KitchenScene {
     }
     // MergeMeshes can transform extracted arrays in place. Never share the cached backing arrays.
     copyGeometry(data).applyToMesh(mesh, false);
-    mesh.material = this.mat(color, roughness, metallic);
+    mesh.material = this.surface(name, color, parent, roughness, metallic);
     mesh.position.set(x, y, z);
     if (parent) mesh.parent = parent;
     mesh.receiveShadows = true;
-    if (Math.max(w, h, d) > 0.3 && w * h * d > 0.018) this.shadows.addShadowCaster(mesh);
+    if (name === 'open table leg' || (Math.max(w, h, d) > 0.3 && w * h * d > 0.018))
+      this.shadows.addShadowCaster(mesh);
     return mesh;
   }
   private dinerFloorMaterial() {
-    const existing = this.textureMaterials.get('floor');
-    if (existing) return existing;
-    const texture = new DynamicTexture(
-      'little-sun-checker-terrazzo',
-      { width: 1024, height: 768 },
-      this.scene,
-      false,
-    );
-    texture.wrapU = texture.wrapV = 0;
-    const ctx = texture.getContext() as unknown as CanvasRenderingContext2D;
-    const cw = 1024 / 15,
-      ch = 768 / 11;
-    ctx.fillStyle = palette.grout;
-    ctx.fillRect(0, 0, 1024, 768);
-    for (let z = 0; z < 11; z++)
-      for (let x = 0; x < 15; x++) {
-        const left = x * cw + 2,
-          top = z * ch + 2,
-          tw = cw - 4,
-          th = ch - 4;
-        ctx.fillStyle = (x + z) % 2 ? '#f3dfbd' : '#f7edda';
-        ctx.beginPath();
-        ctx.roundRect(left, top, tw, th, 4);
-        ctx.fill();
-        ctx.strokeStyle = (x + z) % 2 ? '#dfbd91' : '#e7d8be';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff38';
-        ctx.fillRect(left + 5, top + 4, tw - 10, 2);
-        for (let speck = 0; speck < 8; speck++) {
-          const sx = left + 5 + ((x * 19 + z * 11 + speck * 23) % Math.floor(tw - 10));
-          const sy = top + 5 + ((x * 7 + z * 17 + speck * 13) % Math.floor(th - 10));
-          ctx.fillStyle = ['#dca17c88', '#a8b99588', '#d7bc8c88'][speck % 3];
-          ctx.beginPath();
-          ctx.ellipse(sx, sy, 1.4, 1, speck * 0.4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    texture.update(false);
-
-    const material = new PBRMaterial('little-sun-terrazzo', this.scene);
-    material.albedoTexture = texture;
-    material.roughness = 0.84;
-    material.metallic = 0;
-    this.textureMaterials.set('floor', material);
-    return material;
+    return floorMaterial(this.scene, 'little-sun');
   }
   private wallpaperMaterial() {
     const existing = this.textureMaterials.get('wallpaper');
@@ -522,21 +670,21 @@ export class KitchenScene {
       false,
     );
     const ctx = texture.getContext() as unknown as CanvasRenderingContext2D;
-    ctx.fillStyle = '#fff0d4';
+    ctx.fillStyle = '#FFF1D2';
     ctx.fillRect(0, 0, 512, 512);
     for (let x = 0; x < 512; x += 64) {
-      ctx.fillStyle = '#e8c7a3';
+      ctx.fillStyle = '#DCA94C';
       ctx.fillRect(x, 0, 2, 512);
       for (let y = 0; y < 512; y += 64) {
-        ctx.fillStyle = '#d88b67';
+        ctx.fillStyle = '#F4513D';
         ctx.beginPath();
         ctx.arc(x + 32, y + 32, 3.5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#e4ad58';
+        ctx.fillStyle = '#FFC72C';
         ctx.beginPath();
         ctx.arc(x + 32, y + 32, 17, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#fff4dc';
+        ctx.fillStyle = '#FFF9E9';
         for (let petal = 0; petal < 8; petal++) {
           const angle = (petal / 8) * Math.PI * 2;
           ctx.beginPath();
@@ -575,7 +723,7 @@ export class KitchenScene {
     z = 0,
   ) {
     const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, this.scene);
-    m.material = this.mat(color);
+    m.material = this.surface(name, color, parent);
     m.position.set(x, y, z);
     if (parent) m.parent = parent;
     m.receiveShadows = true;
@@ -596,7 +744,7 @@ export class KitchenScene {
       { diameter: size, segments: sphereSegments(size) },
       this.scene,
     );
-    m.material = this.mat(color);
+    m.material = this.surface(name, color, parent);
     m.parent = parent;
     m.position.set(x, y, z);
     if (size > 0.14) this.shadows.addShadowCaster(m);
@@ -619,7 +767,7 @@ export class KitchenScene {
       { diameter: d, height: h, tessellation: cylinderSegments(d) },
       this.scene,
     );
-    m.material = this.mat(color, roughness, metallic);
+    m.material = this.surface(name, color, parent, roughness, metallic);
     m.parent = parent;
     m.position.set(x, y, z);
     if (d > 0.16) this.shadows.addShadowCaster(m);
@@ -640,7 +788,7 @@ export class KitchenScene {
       { height, radius, tessellation: 12, capSubdivisions: 4, subdivisions: 2 },
       this.scene,
     );
-    mesh.material = this.mat(color, 0.92, 0);
+    mesh.material = this.surface(name, color, parent, 0.92, 0);
     mesh.parent = parent;
     mesh.position.set(x, y, z);
     this.shadows.addShadowCaster(mesh);
@@ -659,7 +807,7 @@ export class KitchenScene {
       { path: points, radius, tessellation: tubeSegments(radius), cap: Mesh.CAP_ALL },
       this.scene,
     );
-    mesh.material = this.mat(color, metallic ? 0.28 : 0.82, metallic);
+    mesh.material = this.surface(name, color, parent, metallic ? 0.28 : 0.82, metallic);
     mesh.parent = parent;
     if (radius > 0.027) this.shadows.addShadowCaster(mesh);
     return mesh;
@@ -684,7 +832,7 @@ export class KitchenScene {
       },
       this.scene,
     );
-    mesh.material = this.mat(color, roughness, metallic);
+    mesh.material = this.surface(name, color, parent, roughness, metallic);
     mesh.parent = parent;
     mesh.position.set(x, y, z);
     const widest = Math.max(...profile.map((point) => point.x));
@@ -744,7 +892,48 @@ export class KitchenScene {
   private world(p: Point) {
     return new Vector3(p.x - 7, 0, p.z - 5);
   }
+  private pickTouchStation(clientX: number, clientY: number, rect: DOMRect) {
+    const width = this.engine.getRenderWidth();
+    const height = this.engine.getRenderHeight();
+    if (width < 1 || height < 1 || rect.width < 1 || rect.height < 1) return null;
+
+    const viewport = this.camera.viewport.toGlobal(width, height);
+    const transform = this.scene.getTransformMatrix();
+    const targets = this.layout.flatMap((station) => {
+      // Match the actual work surface, not the label or the station's floor tile.
+      this.labelWorld.set(station.x - 7, 1.08, station.z - 5);
+      Vector3.ProjectToRef(
+        this.labelWorld,
+        Matrix.IdentityReadOnly,
+        transform,
+        viewport,
+        this.labelProjection,
+      );
+      if (this.labelProjection.z < 0 || this.labelProjection.z > 1) return [];
+      return [
+        {
+          id: station.id,
+          x: rect.left + (this.labelProjection.x / width) * rect.width,
+          y: rect.top + (this.labelProjection.y / height) * rect.height,
+        },
+      ];
+    });
+    return pickTouchStation(clientX, clientY, targets);
+  }
   private buildKitchen() {
+    this.sceneBuildAt = performance.now();
+    this.sceneReadyMs = null;
+    const lighting = restaurantLighting(this.restaurantId);
+    const sky = this.scene.getLightByName('sky') as HemisphericLight;
+    const sun = this.scene.getLightByName('sun') as DirectionalLight;
+    sky.intensity = lighting.fill;
+    sky.diffuse = Color3.FromHexString(lighting.fillColor);
+    sky.groundColor = Color3.FromHexString(lighting.ground);
+    sun.intensity = lighting.key;
+    sun.diffuse = Color3.FromHexString(lighting.keyColor);
+    sun.specular = Color3.FromHexString('#fff7ee');
+    sun.direction.set(-0.32, -1, 0.28);
+    this.shadows.setDarkness(lighting.shadow);
     this.effects.clear();
     this.stationHeat.clear();
     this.stationHeatStates.clear();
@@ -763,7 +952,15 @@ export class KitchenScene {
     else this.buildGenericKitchen();
     for (const root of this.kitchenNodes) this.batchStatic(root);
     // Warm effect materials before animation so the frame loop only hits the cache.
-    for (const color of ['#62594e', '#acdfe9', '#edc566', '#f0e7d8', '#b8c8c6', '#efa44e'])
+    for (const color of [
+      '#F4513D',
+      '#65C9DB',
+      '#FFC72C',
+      '#8BE0BD',
+      '#3C4960',
+      '#F07B32',
+      '#6937C8',
+    ])
       this.mat(color);
     for (const def of this.layout) {
       const root = new TransformNode(`effect-${def.id}`, this.scene);
@@ -784,7 +981,9 @@ export class KitchenScene {
                 1.3,
                 0,
               )
-            : this.sphere('steam puff', 0.14, '#f0e7d8', root, (i - 1) * 0.13, 1.4 + i * 0.2, 0);
+            : i === 2
+              ? this.comicBurst(root)
+              : this.sphere('steam puff', 0.14, '#f0e7d8', root, (i - 1) * 0.13, 1.4 + i * 0.2, 0);
         mesh.isPickable = false;
         this.shadows.removeShadowCaster(mesh);
         mesh.setEnabled(false);
@@ -792,10 +991,32 @@ export class KitchenScene {
       });
       this.effects.set(def.id, particles);
     }
+    this.sceneBuildMs = performance.now() - this.sceneBuildAt;
   }
   /** Merge only static meshes with the same material, preserving the station parent for picking. */
+  private comicBurst(parent: TransformNode) {
+    const mesh = new Mesh('comic completion burst', this.scene);
+    const data = new VertexData(),
+      positions = [0, 0, 0],
+      indices: number[] = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i * Math.PI) / 8,
+        r = i % 2 ? 0.08 : 0.24;
+      positions.push(Math.cos(a) * r, 0, Math.sin(a) * r);
+      indices.push(0, i + 1, ((i + 1) % 16) + 1);
+    }
+    data.positions = positions;
+    data.indices = indices;
+    data.normals = [];
+    VertexData.ComputeNormals(positions, indices, data.normals);
+    data.applyToMesh(mesh);
+    mesh.parent = parent;
+    mesh.material = this.mat('#FFC72C');
+    mesh.position.y = 1.16;
+    return mesh;
+  }
   private batchStatic(root: TransformNode, direct = false) {
-    const groups = new Map<PBRMaterial, Mesh[]>();
+    const groups = new Map<string, Mesh[]>();
     for (const mesh of root.getChildMeshes(direct)) {
       if (
         !(mesh instanceof Mesh) ||
@@ -804,9 +1025,13 @@ export class KitchenScene {
       )
         continue;
       const material = mesh.material as PBRMaterial;
-      const list = groups.get(material) ?? [];
-      list.push(mesh);
-      groups.set(material, list);
+      // Mesh.MergeMeshes requires every source to expose the same vertex streams.
+      // Material alone is not a sufficient batch key (custom decals/props may omit UVs).
+      const attributes = mesh.getVerticesDataKinds().sort().join(',');
+      const key = `${material.uniqueId}:${attributes}`;
+      const group = groups.get(key) ?? [];
+      group.push(mesh);
+      groups.set(key, group);
     }
     for (const group of groups.values()) {
       if (group.length < 2) continue;
@@ -817,19 +1042,27 @@ export class KitchenScene {
           m.name.includes('puff sleeve'),
       );
       const pickable = group.some((m) => m.isPickable);
-      const castsShadow = group.some((m) => this.shadows.getShadowMap()?.renderList?.includes(m));
+      const casters = group.filter((m) => this.shadows.getShadowMap()?.renderList?.includes(m));
       group.forEach((m) => {
         m.computeWorldMatrix(true);
         this.shadows.removeShadowCaster(m);
       });
-      const mesh = Mesh.MergeMeshes(group, true, true);
+      let mesh: Mesh | null;
+      try {
+        mesh = Mesh.MergeMeshes(group, true, true);
+      } catch (error) {
+        // A malformed optional art batch must not prevent the kitchen from loading.
+        console.warn(`Skipped static mesh batch under ${root.name}`, error);
+        casters.forEach((caster) => this.shadows.addShadowCaster(caster));
+        continue;
+      }
       if (mesh) {
         mesh.name = team ? 'team-coat' : `${root.name}-batch`;
         mesh.setParent(root);
         mesh.isPickable = pickable;
         mesh.receiveShadows = true;
-        if (castsShadow) this.shadows.addShadowCaster(mesh);
-      }
+        if (casters.length) this.shadows.addShadowCaster(mesh);
+      } else casters.forEach((caster) => this.shadows.addShadowCaster(caster));
     }
   }
   private buildLittleSunKitchen() {
@@ -843,19 +1076,20 @@ export class KitchenScene {
       { width: 15, height: 11, subdivisions: 1 },
       this.scene,
     );
-    floor.position.y = -0.025;
+    floor.position.y = visualGroundY;
     floor.parent = room;
     floor.material = this.dinerFloorMaterial();
     floor.receiveShadows = true;
     floor.isPickable = true;
+    restaurantGraphics(this.art(), room, 'little-sun');
 
-    this.roundedBox('back wall', 15, 2.7, 0.2, 0.06, '#efdfc2', room, 0, 1.15, -5.55);
+    this.roundedBox('back wall', 15, 2.7, 0.2, 0.06, '#F5D27B', room, 0, 1.15, -5.55);
     const paper = this.box(
       'daisy print wallpaper',
       14.82,
       1.58,
       0.05,
-      '#fff0d4',
+      '#FFF1D2',
       room,
       0,
       1.7,
@@ -1202,21 +1436,27 @@ export class KitchenScene {
   }
   private buildStations() {
     const theme = restaurantArt(this.restaurantId);
-    const palette = { ...basePalette, teal: theme.cabinet, dark: theme.wood, gold: theme.accent };
+    const palette = {
+      ...basePalette,
+      teal: theme.cabinet,
+      dark: theme.wood,
+      gold: theme.accent,
+      pink: theme.secondary,
+    };
     for (const def of this.layout) {
       const station = new TransformNode(def.id, this.scene);
       station.metadata = { station: def.id };
       station.position = this.world(def);
       const seat = def.kind === 'seat';
-      const openTable = ['board', 'sink', 'rack', 'counter'].includes(def.kind);
+      const openTable = isOpenWorktable(def.kind);
       const noTop = seat || def.kind === 'trash';
       const cabinetColor = def.kind === 'trash' ? '#28544c' : palette.teal;
       if (def.kind === 'trash') {
         this.lathe(
           'tapered pedal bin shell',
           [
-            new Vector3(0, 0),
-            new Vector3(0.27, 0),
+            new Vector3(0, -0.08),
+            new Vector3(0.27, -0.08),
             new Vector3(0.35, 0.09),
             new Vector3(0.38, 0.74),
             new Vector3(0.34, 0.79),
@@ -1232,7 +1472,7 @@ export class KitchenScene {
         this.roundedBox(
           'booth wooden plinth',
           0.88,
-          0.29,
+          0.36,
           0.78,
           0.07,
           '#79503f',
@@ -1242,18 +1482,18 @@ export class KitchenScene {
           0.08,
         );
       } else if (openTable) {
-        for (const x of [-0.39, 0.39])
-          for (const z of [-0.39, 0.39])
+        for (const x of [-openTableSupport.offset, openTableSupport.offset])
+          for (const z of [-openTableSupport.offset, openTableSupport.offset])
             this.roundedBox(
               'open table leg',
               0.085,
-              0.76,
+              openTableSupport.height,
               0.085,
               0.028,
               theme.wood,
               station,
               x,
-              0.43,
+              openTableSupport.centerY,
               z,
               0.72,
               0.04,
@@ -1297,7 +1537,7 @@ export class KitchenScene {
           0.4,
           0,
         );
-        this.roundedBox('cabinet plinth', 0.84, 0.09, 0.78, 0.035, '#173c38', station, 0, 0.085, 0);
+        this.roundedBox('cabinet plinth', 0.84, 0.13, 0.78, 0.035, '#173c38', station, 0, 0.065, 0);
         this.roundedBox(
           'enameled inset panel',
           0.71,
@@ -1977,27 +2217,129 @@ export class KitchenScene {
           0.56,
           0.08,
         );
-        this.roundedBox(
-          'diner tabletop',
-          1.02,
-          0.11,
-          0.76,
-          0.12,
-          '#f3d9a8',
-          station,
-          0,
-          1.0,
-          0.05,
-          0.84,
-          0,
-        );
-        this.roundedBox('table pedestal', 0.22, 0.42, 0.2, 0.07, '#a85d43', station, 0, 0.74, 0.05);
       }
       dressStation(this.art(), station, def, this.restaurantId);
       station.metadata = { station: def.id };
     }
+
+    // Seats stay at their server-authored grid positions, while their furniture
+    // reads as one shared two-place dining run instead of two isolated tables.
+    const seats = this.layout
+      .filter((station) => station.kind === 'seat')
+      .slice()
+      .sort((a, b) => a.z - b.z);
+    if (seats.length) {
+      const first = seats[0]!;
+      const last = seats.at(-1)!;
+      const center = new TransformNode('shared dining run · visual only', this.scene);
+      center.position.copyFrom(
+        this.world({ x: (first.x + last.x) / 2, z: (first.z + last.z) / 2 }),
+      );
+      const runLength = Math.max(1.45, last.z - first.z + 1.15);
+      this.roundedBox(
+        'continuous dining table apron',
+        1.16,
+        0.17,
+        runLength + 0.08,
+        0.08,
+        theme.wood,
+        center,
+        0,
+        0.91,
+        0,
+        0.82,
+        0.02,
+      );
+      this.roundedBox(
+        'continuous dining tabletop',
+        1.26,
+        0.13,
+        runLength,
+        0.09,
+        this.restaurantId === 'little-sun' ? '#f3d9a8' : theme.accent,
+        center,
+        0,
+        1.05,
+        0,
+        0.78,
+        0.03,
+      );
+      for (const seat of seats) {
+        const placeZ = seat.z - (first.z + last.z) / 2;
+        this.roundedBox(
+          'woven place mat',
+          0.68,
+          0.025,
+          0.72,
+          0.065,
+          theme.cabinet,
+          center,
+          0.22,
+          1.128,
+          placeZ,
+          0.94,
+        );
+        this.roundedBox(
+          'folded linen napkin',
+          0.24,
+          0.026,
+          0.27,
+          0.045,
+          this.restaurantId === 'little-sun' ? theme.accent : '#fff2d7',
+          center,
+          0.22,
+          1.154,
+          placeZ - 0.12,
+          0.93,
+        );
+        this.roundedBox(
+          'napkin stitched edge',
+          0.19,
+          0.009,
+          0.018,
+          0.008,
+          theme.accent,
+          center,
+          0.22,
+          1.171,
+          placeZ - 0.12,
+          0.72,
+          0.03,
+        );
+      }
+      for (const z of [-1, 1]) {
+        this.roundedBox(
+          'dining table pedestal foot',
+          0.82,
+          0.1,
+          0.16,
+          0.045,
+          theme.wood,
+          center,
+          0,
+          0.05,
+          (runLength / 2 - 0.24) * z,
+        );
+        this.roundedBox(
+          'dining table pedestal',
+          0.19,
+          0.8,
+          0.19,
+          0.065,
+          theme.wood,
+          center,
+          0,
+          0.5,
+          (runLength / 2 - 0.24) * z,
+        );
+      }
+    }
+    stationContacts(this.scene, this.layout, true);
   }
   private person(id: string, color: string, chef = false): CharacterRig {
+    const appearance = chef
+      ? { variant: 0, hair: '#825039', blinkOffset: 0 }
+      : customerAppearance(id);
     const root = new TransformNode(id, this.scene);
     // A small unlit contact ellipse grounds the feet even in Low Graphics mode.
     let contactMaterial = this.textureMaterials.get('character-contact');
@@ -2022,8 +2364,8 @@ export class KitchenScene {
     const torso = new TransformNode(`${id}-torso`, this.scene);
     torso.parent = root;
     torso.position.y = 0.65;
-    const coat = this.capsule('body', 0.82, 0.33, color, torso, 0, 0, 0);
-    coat.scaling.set(1.12, 1.0, 0.82);
+    const coat = this.capsule('body', 0.76, 0.35, color, torso, 0, 0, 0);
+    coat.scaling.set(1.1, 1.0, 0.94);
     for (const x of [-0.24, 0.24]) {
       const shoulder = this.sphere('rounded jacket shoulder', 0.35, color, torso, x, 0.24, 0);
       shoulder.scaling.set(1, 0.87, 0.84);
@@ -2031,8 +2373,8 @@ export class KitchenScene {
     if (chef) {
       this.roundedBox(
         'apron waist panel',
-        0.48,
-        0.47,
+        0.55,
+        0.45,
         0.075,
         0.07,
         '#fff1d5',
@@ -2120,74 +2462,35 @@ export class KitchenScene {
     const head = new TransformNode(`${id}-head`, this.scene);
     head.parent = root;
     head.position.set(0, 1.3, 0.015);
-    const hair = this.sphere(
-      'hair silhouette',
-      0.84,
-      chef ? '#825039' : '#704735',
-      head,
-      0,
-      0.045,
-      -0.045,
-    );
-    hair.scaling.set(1, 1.02, 0.86);
-    const face = this.sphere('soft round face', 0.81, '#eab68d', head, 0, 0, 0.035);
-    face.scaling.set(1.03, 1.06, 0.92);
-    for (const side of [-1, 1]) {
-      this.sphere('warm cheek', 0.16, '#edae98', head, side * 0.245, -0.13, 0.335).scaling.z = 0.25;
-      const eyeWhite = this.sphere('eye white', 0.16, '#fffaf0', head, side * 0.145, 0.058, 0.358);
-      eyeWhite.scaling.set(0.86, 1.0, 0.22);
-      this.sphere(
-        'hazel iris',
-        0.089,
-        '#694a3b',
-        head,
-        side * 0.135 + 0.015,
-        0.045,
-        0.387,
-      ).scaling.z = 0.22;
-      this.sphere(
-        'dark pupil',
-        0.048,
-        '#273c39',
-        head,
-        side * 0.135 + 0.02,
-        0.042,
-        0.397,
-      ).scaling.z = 0.22;
-      this.sphere(
-        'eye catchlight',
-        0.024,
-        '#ffffff',
-        head,
-        side * 0.135 + 0.005,
-        0.069,
-        0.402,
-      ).scaling.z = 0.22;
-      this.tube(
-        'expressive eyebrow',
-        [
-          new Vector3(side * 0.235, 0.183, 0.354),
-          new Vector3(side * 0.15, 0.218, 0.382),
-          new Vector3(side * 0.065, 0.19, 0.363),
-        ],
-        0.021,
-        '#694734',
-        head,
+    head.rotation.x = -0.22;
+    if (!chef)
+      head.scaling.set(
+        [1, 1.05, 0.96, 1.08][appearance.variant],
+        [1, 0.96, 1.04, 0.94][appearance.variant],
+        1,
       );
+    const hair = this.sphere('hair silhouette', 0.91, appearance.hair, head, 0, 0.045, -0.045);
+    hair.scaling.set(1, 1.02, 0.86);
+    const face = this.sphere('soft round face', 0.88, '#eab68d', head, 0, 0, 0.035);
+    face.scaling.set(1.08, 0.96, 0.95);
+    for (const side of [-1, 1]) {
+      this.sphere('rounded ear', 0.2, '#eab68d', head, side * 0.45, -0.04, 0.015).scaling.set(
+        0.65,
+        1,
+        0.75,
+      );
+      this.sphere(
+        'ear inner warmth',
+        0.075,
+        '#d99571',
+        head,
+        side * 0.48,
+        -0.035,
+        0.055,
+      ).scaling.set(0.5, 1, 0.45);
+      this.sphere('warm cheek', 0.16, '#edae98', head, side * 0.245, -0.13, 0.335).scaling.z = 0.25;
     }
-    this.sphere('button nose', 0.09, '#d99571', head, 0, -0.03, 0.4);
-    this.tube(
-      'friendly smile',
-      [
-        new Vector3(-0.115, -0.15, 0.365),
-        new Vector3(-0.055, -0.197, 0.398),
-        new Vector3(0.02, -0.205, 0.402),
-        new Vector3(0.115, -0.15, 0.365),
-      ],
-      0.017,
-      '#804d42',
-      head,
-    );
+    this.sphere('button nose', 0.115, '#d99571', head, 0, -0.035, 0.426);
     if (chef) {
       this.sphere('hat hairline curl', 0.16, '#825039', head, -0.31, 0.28, -0.02);
       this.cylinder('toque gold piping', 0.62, 0.08, '#e5b45d', head, 0, 0.51, 0, 0.52, 0.03);
@@ -2216,7 +2519,8 @@ export class KitchenScene {
         puff.scaling.set(0.94, 1.08, 0.9);
       }
       const centerPuff = this.sphere('toque crown center', 0.42, '#fffaf0', head, 0, 0.88, -0.025);
-      centerPuff.scaling.set(0.95, 1.06, 0.92);
+      centerPuff.scaling.set(1.1, 1.0, 0.95);
+      centerPuff.position.x = 0.055;
       for (const x of [-0.235, 0.235])
         this.tube(
           'toque pleat',
@@ -2229,9 +2533,54 @@ export class KitchenScene {
           '#e9e5d8',
           head,
         );
+    } else if (appearance.variant === 0) {
+      this.sphere('curly fringe', 0.25, appearance.hair, head, 0.18, 0.27, 0.25);
+      this.sphere('side curl', 0.26, appearance.hair, head, -0.33, -0.04, 0.02);
+    } else if (appearance.variant === 1) {
+      const fringe = this.capsule(
+        'side-swept fringe',
+        0.48,
+        0.17,
+        appearance.hair,
+        head,
+        0.08,
+        0.28,
+        0.23,
+      );
+      fringe.rotation.z = -0.28;
+      this.sphere('soft temple curl', 0.24, appearance.hair, head, -0.32, -0.02, 0.14);
+    } else if (appearance.variant === 2) {
+      const fringe = this.capsule(
+        'swept-up fringe',
+        0.42,
+        0.16,
+        appearance.hair,
+        head,
+        -0.08,
+        0.29,
+        0.21,
+      );
+      fringe.rotation.z = 0.24;
+      this.sphere('low ponytail', 0.29, appearance.hair, head, 0.16, 0.01, -0.31);
+      this.cylinder('warm hair tie', 0.16, 0.055, '#e5b45d', head, 0.16, 0.02, -0.33);
     } else {
-      this.sphere('curly fringe', 0.25, '#704735', head, 0.18, 0.27, 0.25);
-      this.sphere('side curl', 0.26, '#704735', head, -0.33, -0.04, 0.02);
+      this.sphere('rounded top knot', 0.31, appearance.hair, head, -0.08, 0.34, -0.02);
+      const band = this.tube(
+        'soft fabric hairband',
+        Array.from(
+          { length: 17 },
+          (_, i) =>
+            new Vector3(
+              Math.cos((i * Math.PI) / 16) * 0.34,
+              0.2 + Math.sin((i * Math.PI) / 16) * 0.16,
+              0.255,
+            ),
+        ),
+        0.024,
+        '#e7b865',
+        head,
+      );
+      band.isPickable = false;
     }
 
     const leftArm = new TransformNode(`${id}-left-arm`, this.scene);
@@ -2246,7 +2595,7 @@ export class KitchenScene {
       const sleeve = this.capsule(`${name} puff sleeve`, 0.43, 0.15, color, arm, 0, -0.15, 0.01);
       sleeve.rotation.z = name === 'left' ? -0.13 : 0.13;
       this.cylinder(`${name} cuff`, 0.27, 0.07, '#fff1d5', arm, 0, -0.32, 0.045, 0.86, 0);
-      const hand = this.sphere(`${name} hand`, 0.2, '#eab68d', arm, 0, -0.43, 0.08);
+      const hand = this.sphere(`${name} hand`, 0.24, '#eab68d', arm, 0, -0.43, 0.08);
       hand.scaling.set(0.93, 0.95, 0.83);
       this.sphere(
         `${name} thumb`,
@@ -2268,7 +2617,7 @@ export class KitchenScene {
       ['right', rightLeg],
     ] as const) {
       this.capsule(`${name} trouser leg`, 0.43, 0.115, '#456158', leg, 0, -0.09, 0);
-      const shoe = this.sphere(`${name} rounded work shoe`, 0.3, '#403e39', leg, 0, -0.3, 0.07);
+      const shoe = this.sphere(`${name} rounded work shoe`, 0.34, '#403e39', leg, 0, -0.25, 0.07);
       shoe.scaling.set(0.95, 0.62, 1.22);
       this.roundedBox(
         `${name} shoe welt`,
@@ -2279,20 +2628,52 @@ export class KitchenScene {
         '#d4a565',
         leg,
         0,
-        -0.38,
+        -0.3475,
         0.09,
         0.62,
         0,
       );
     }
-    const rig = { root, contact, torso, head, leftArm, rightArm, leftLeg, rightLeg };
-    for (const part of [torso, head, leftArm, rightArm, leftLeg, rightLeg])
+    const slots = {
+      hat: new TransformNode(`${id}-hat-slot`, this.scene),
+      hair: new TransformNode(`${id}-hair-slot`, this.scene),
+      apron: new TransformNode(`${id}-apron-slot`, this.scene),
+    };
+    const rig = {
+      root,
+      contact,
+      torso,
+      head,
+      leftArm,
+      rightArm,
+      leftLeg,
+      rightLeg,
+      face: this.createCharacterFace(head),
+      faceKey: '',
+      blinkOffset: appearance.blinkOffset,
+      slots,
+    };
+    slots.hat.parent = slots.hair.parent = head;
+    slots.apron.parent = torso;
+    for (const mesh of head.getChildMeshes(true)) {
+      if (/toque/.test(mesh.name)) mesh.parent = slots.hat;
+      else if (/hair|fringe|curl|ponytail|top knot/.test(mesh.name)) mesh.parent = slots.hair;
+    }
+    for (const mesh of torso.getChildMeshes(true))
+      if (mesh.name.startsWith('apron')) mesh.parent = slots.apron;
+    root.metadata = {
+      artVersion: characterArtContract.version,
+      slots: Object.fromEntries(Object.entries(slots).map(([slot, node]) => [slot, node.name])),
+      heldAnchor: characterArtContract.heldAnchor,
+    };
+    for (const part of [torso, head, leftArm, rightArm, leftLeg, rightLeg, ...Object.values(slots)])
       this.batchStatic(part, true);
     this.rigs.set(id, rig);
     return rig;
   }
   private food(item: Item) {
     const p = new TransformNode(item.id, this.scene);
+    p.metadata = { visualFood: true };
     const recipe = dishRecipe(item.kind);
     const needsPlate = ['plate', 'dirtyPlate'].includes(item.kind) || !!recipe;
     if (needsPlate) {
@@ -2427,18 +2808,78 @@ export class KitchenScene {
           ).rotation.y = Math.PI / 5;
     };
 
-    if (item.kind === 'burger' || item.kind === 'deluxe-burger') {
+    if (
+      item.kind === 'burger' ||
+      item.kind === 'deluxe-burger' ||
+      item.kind === 'cheeseburger' ||
+      item.kind === 'chicken-burger'
+    ) {
       this.cylinder('bottom brioche', 0.5, 0.1, '#d99b54', p, 0, 0.12, 0);
-      patty(false, 0.245, 0.86);
-      for (let leafIndex = 0; leafIndex < 7; leafIndex++) {
-        const angle = (leafIndex / 7) * Math.PI * 2;
+      if (item.kind === 'chicken-burger') {
+        this.roundedBox(
+          'crispy chicken fillet',
+          0.48,
+          0.14,
+          0.4,
+          0.055,
+          '#bd7040',
+          p,
+          0,
+          0.245,
+          0,
+          0.8,
+        );
+        for (let crumb = 0; crumb < 6; crumb++)
+          this.sphere(
+            'crunchy chicken crumb',
+            0.055,
+            '#e0a35c',
+            p,
+            Math.sin(crumb * 2.4) * 0.19,
+            0.32,
+            Math.cos(crumb * 2.4) * 0.16,
+          ).scaling.set(1.2, 0.5, 0.8);
+      } else patty(false, 0.245, 0.86);
+      if (item.kind === 'cheeseburger')
+        this.roundedBox(
+          'melted cheddar layer',
+          0.57,
+          0.065,
+          0.54,
+          0.035,
+          '#f3c548',
+          p,
+          0,
+          0.315,
+          0,
+          0.85,
+        );
+      if (item.kind === 'cheeseburger')
+        for (const side of [-1, 1]) {
+          const drip = this.roundedBox(
+            'cheddar folded corner',
+            0.13,
+            0.11,
+            0.09,
+            0.035,
+            '#f3c548',
+            p,
+            side * 0.23,
+            0.275,
+            0.19,
+            0.85,
+          );
+          drip.rotation.z = side * 0.3;
+        }
+      for (let leafIndex = 0; leafIndex < 5; leafIndex++) {
+        const angle = (leafIndex / 5) * Math.PI * 2;
         leaf(
           'crinkled butter lettuce frill',
-          Math.cos(angle) * 0.23,
+          Math.cos(angle) * 0.18,
           0.315,
-          Math.sin(angle) * 0.23,
+          Math.sin(angle) * 0.18,
           angle,
-          0.86,
+          0.64,
         );
       }
       this.cylinder('burger relish', 0.34, 0.027, '#7da84c', p, 0, 0.31, 0, 0.83);
@@ -2458,7 +2899,7 @@ export class KitchenScene {
             stripe * 0.13,
             0.8,
           );
-      } else bun('top brioche dome', 0.405, 0.78);
+      } else bun('top brioche dome', 0.46, 0.95);
     } else if (item.kind === 'burger-bun') {
       bun('brioche bun', 0.11);
     } else if (item.kind === 'bun' || item.kind === 'bun-prepared' || item.kind === 'toast') {
@@ -2556,17 +2997,174 @@ export class KitchenScene {
           p,
         );
       }
-    } else if (recipe && item.kind.startsWith('tide-')) {
-      for (const x of [-0.18, 0.18]) {
-        const rice = this.food({ id: 'rice', kind: 'tide-hot', parts: [] });
-        rice.parent = p;
-        rice.position.set(x, 0.12, 0);
-        rice.scaling.set(0.8, 0.8, 1);
-        this.roundedBox('nigiri salmon topping', 0.26, 0.075, 0.33, 0.05, '#ed9471', p, x, 0.29, 0);
-        this.roundedBox('nigiri nori belt', 0.055, 0.09, 0.35, 0.015, '#385442', p, x, 0.31, 0);
+    } else if (recipe?.id === 'sunshine-fries') {
+      for (let fry = 0; fry < 9; fry++) {
+        const stick = this.roundedBox(
+          'golden hand-cut french fry',
+          0.09,
+          0.29,
+          0.085,
+          0.025,
+          fry % 3 ? '#edbd54' : '#f5d475',
+          p,
+          ((fry % 3) - 1) * 0.12,
+          0.2 + (fry % 2) * 0.06,
+          (Math.floor(fry / 3) - 1) * 0.1,
+          0.04,
+        );
+        stick.rotation.z = (fry % 2 ? 1 : -1) * 0.08;
       }
-      if (item.kind.endsWith('premium'))
-        this.cylinder('toasted sesame garnish', 0.06, 0.03, '#eac577', p, 0, 0.2, 0.22);
+    } else if (recipe?.id.startsWith('tide-')) {
+      const roll = recipe.id === 'tide-signature-b' || recipe.id === 'tide-signature-c';
+      if (roll) {
+        for (let piece = 0; piece < 4; piece++) {
+          const x = (piece - 1.5) * 0.17;
+          this.cylinder('nori maki roll', 0.16, 0.16, '#324b3e', p, x, 0.16, 0.01, 0.55);
+          this.cylinder('rice ring', 0.12, 0.17, '#fff2d8', p, x, 0.16, 0.012, 0.5);
+          this.sphere(
+            'salmon or roe center',
+            0.075,
+            piece % 2 ? '#ec8b6f' : '#e7b65f',
+            p,
+            x,
+            0.25,
+            0.018,
+          ).scaling.set(1, 0.8, 0.8);
+        }
+      } else {
+        for (const x of [-0.2, 0, 0.2]) {
+          this.sphere('hand-pressed sushi rice', 0.16, '#fff2d8', p, x, 0.13, 0).scaling.set(
+            1.25,
+            0.48,
+            0.75,
+          );
+          this.roundedBox(
+            'salmon nigiri topping',
+            0.25,
+            0.075,
+            0.24,
+            0.05,
+            recipe.id === 'tide-signature-a' && x === 0 ? '#d47a5f' : '#ed9471',
+            p,
+            x,
+            0.22,
+            0,
+            0.8,
+          );
+          this.tube(
+            'salmon marbling',
+            [new Vector3(x - 0.07, 0.263, -0.06), new Vector3(x + 0.06, 0.263, 0.05)],
+            0.012,
+            '#ffe0b2',
+            p,
+          );
+        }
+      }
+      if (recipe.id === 'tide-premium' || recipe.id === 'tide-signature-c')
+        this.cylinder('toasted sesame garnish', 0.055, 0.03, '#eac577', p, 0, 0.24, 0.22);
+    } else if (recipe?.id.startsWith('olive-')) {
+      for (let strand = 0; strand < 8; strand++) {
+        const angle = (strand * Math.PI) / 4;
+        this.tube(
+          'silky pasta nest',
+          Array.from({ length: 12 }, (_, i) => {
+            const t = i / 11;
+            return new Vector3(
+              Math.cos(angle + t * 5) * (0.07 + t * 0.15),
+              0.12 + t * 0.09,
+              Math.sin(angle + t * 5) * (0.07 + t * 0.15),
+            );
+          }),
+          0.022,
+          strand % 2 ? '#e8c26e' : '#f4d989',
+          p,
+        );
+      }
+      for (let tomato = 0; tomato < 5; tomato++)
+        this.sphere(
+          'roasted tomato',
+          0.095,
+          tomato % 2 ? '#d86443' : '#e88950',
+          p,
+          Math.sin(tomato * 1.25) * 0.22,
+          0.2,
+          Math.cos(tomato * 1.25) * 0.17,
+        ).scaling.set(1, 0.75, 1);
+      if (recipe.id === 'olive-premium' || recipe.id === 'olive-signature-c')
+        for (let leaflet = 0; leaflet < 4; leaflet++)
+          leaf(
+            'fresh basil garnish',
+            Math.sin(leaflet * 1.6) * 0.15,
+            0.29,
+            Math.cos(leaflet * 1.6) * 0.14,
+            leaflet,
+            0.48,
+          );
+    } else if (recipe?.id.startsWith('lantern-')) {
+      if (recipe.id === 'lantern-signature-c') {
+        for (let dumpling = 0; dumpling < 5; dumpling++) {
+          const x = (dumpling - 2) * 0.13;
+          this.sphere(
+            'steamed dumpling body',
+            0.13,
+            '#f2d9a4',
+            p,
+            x,
+            0.15,
+            Math.sin(dumpling) * 0.1,
+          ).scaling.set(1.2, 0.7, 0.9);
+          this.tube(
+            'dumpling pleat',
+            [
+              new Vector3(x - 0.08, 0.21, 0),
+              new Vector3(x, 0.26, 0.025),
+              new Vector3(x + 0.08, 0.21, 0),
+            ],
+            0.012,
+            '#c08a54',
+            p,
+          );
+        }
+      } else {
+        for (let noodle = 0; noodle < 7; noodle++)
+          this.tube(
+            'wok-tossed noodle ribbon',
+            Array.from(
+              { length: 10 },
+              (_, i) =>
+                new Vector3(
+                  -0.22 + i * 0.048,
+                  0.13 + Math.sin(i * 0.85 + noodle) * 0.055,
+                  Math.sin(i * 0.55 + noodle * 1.7) * 0.16,
+                ),
+            ),
+            0.017,
+            noodle % 2 ? '#e8bd67' : '#f2d88e',
+            p,
+          );
+        for (let garnish = 0; garnish < 5; garnish++)
+          this.roundedBox(
+            'wok vegetable or tofu',
+            0.12,
+            0.095,
+            0.11,
+            0.02,
+            garnish % 2 ? '#d78a4e' : '#8da85a',
+            p,
+            Math.sin(garnish * 1.4) * 0.19,
+            0.24,
+            Math.cos(garnish * 1.4) * 0.16,
+          );
+      }
+    } else if (recipe?.id.startsWith('orbit-')) {
+      this.cylinder('orbital sauce pool', 0.39, 0.045, '#7d668f', p, 0, 0.09, 0, 0.9);
+      recipe.components.forEach((kind, index) => {
+        const component = this.food({ id: `orbit-plating-${index}`, kind, parts: [] });
+        component.parent = p;
+        const angle = (index * Math.PI * 2) / recipe.components.length;
+        component.position.set(Math.cos(angle) * 0.2, 0.11, Math.sin(angle) * 0.17);
+        component.scaling.setAll(0.68);
+      });
     } else if (recipe && item.kind !== 'burger' && item.kind !== 'deluxe-burger') {
       const palette = item.parts.length ? item.parts : recipe.components;
       palette.forEach((kind, index) => {
@@ -2576,6 +3174,71 @@ export class KitchenScene {
         piece.position.set(Math.cos(angle) * 0.16, 0.11 + index * 0.055, Math.sin(angle) * 0.16);
         piece.scaling.setAll(0.85);
       });
+    } else if (item.kind === 'cheese' || item.kind === 'slicedCheese') {
+      this.roundedBox(
+        'cheddar slice',
+        0.42,
+        item.kind === 'cheese' ? 0.12 : 0.04,
+        0.38,
+        0.035,
+        item.kind === 'cheese' ? '#e6b537' : '#f3cc50',
+        p,
+        0,
+        0.11,
+        0,
+        0.35,
+      );
+      if (item.kind === 'slicedCheese')
+        this.sphere('cheese shine', 0.045, '#fff0a0', p, -0.11, 0.15, -0.07).scaling.set(
+          1.7,
+          0.2,
+          0.6,
+        );
+    } else if (item.kind === 'chicken' || item.kind === 'friedChicken') {
+      const cooked = item.kind === 'friedChicken';
+      this.capsule(
+        cooked ? 'crispy chicken tender' : 'raw chicken fillet',
+        0.42,
+        0.18,
+        cooked ? '#c87a42' : '#e6a08c',
+        p,
+        0,
+        0.12,
+        0,
+      ).scaling.set(1.15, 0.7, 0.85);
+      if (cooked)
+        for (let crumb = 0; crumb < 5; crumb++)
+          this.sphere(
+            'crunch coating',
+            0.05,
+            '#f0c06b',
+            p,
+            Math.sin(crumb * 2.4) * 0.17,
+            0.22,
+            Math.cos(crumb * 2.4) * 0.11,
+          ).scaling.y = 0.5;
+    } else if (['potato', 'cutPotato', 'cookedFries'].includes(item.kind)) {
+      const cooked = item.kind === 'cookedFries';
+      const pieces = cooked ? 5 : item.kind === 'potato' ? 1 : 4;
+      for (let piece = 0; piece < pieces; piece++) {
+        const angle = piece * 1.2;
+        if (!cooked && item.kind === 'potato')
+          this.sphere('russet potato', 0.24, '#bf945f', p, 0, 0.12, 0).scaling.set(1.3, 0.75, 1);
+        else
+          this.roundedBox(
+            cooked ? 'golden fry baton' : 'fresh potato baton',
+            0.09,
+            0.23,
+            0.085,
+            0.025,
+            cooked ? '#edbd54' : '#e2c18c',
+            p,
+            Math.cos(angle) * 0.12,
+            0.15 + (piece % 2) * 0.035,
+            Math.sin(angle) * 0.12,
+            0.08,
+          );
+      }
     } else if (item.kind === 'plate') {
       item.parts.forEach((kind, index) => {
         const ingredient = this.food({ id: 'plated-ingredient', kind, parts: [] });
@@ -2585,6 +3248,126 @@ export class KitchenScene {
       });
     } else if (item.kind === 'dirtyPlate') {
       // Crumbs and sauce are already on the ceramic plate.
+    } else if (/-signature-(raw|cooked)$/.test(item.kind)) {
+      const region = item.kind.split('-')[0];
+      const cooked = item.kind.endsWith('-cooked');
+      if (region === 'tide') {
+        this.capsule(
+          'tuna loin',
+          0.38,
+          0.18,
+          cooked ? '#a85e4b' : '#d27b62',
+          p,
+          0,
+          0.12,
+          0,
+        ).scaling.set(1.1, 0.6, 0.85);
+        for (let stripe = -1; stripe <= 1; stripe++)
+          this.tube(
+            'tuna grain',
+            [new Vector3(-0.15, 0.16, stripe * 0.07), new Vector3(0.14, 0.16, stripe * 0.07)],
+            0.009,
+            '#ffd6a6',
+            p,
+          );
+      } else if (region === 'orbit') {
+        this.sphere(
+          'meteor mushroom cap',
+          0.25,
+          cooked ? '#8f695c' : '#c29c85',
+          p,
+          0,
+          0.18,
+          0,
+        ).scaling.set(1.15, 0.55, 1);
+        this.cylinder('mushroom stem', 0.13, 0.2, '#ead8bb', p, 0, 0.09, 0);
+        for (let spot = 0; spot < 4; spot++)
+          this.sphere(
+            'mushroom fleck',
+            0.035,
+            '#f4e5c8',
+            p,
+            Math.sin(spot * 1.6) * 0.12,
+            0.29,
+            Math.cos(spot * 1.6) * 0.1,
+          );
+      } else {
+        this.capsule(
+          region === 'olive' ? 'chicken tender' : 'beef strip',
+          0.42,
+          0.17,
+          cooked ? '#ad6847' : region === 'olive' ? '#e7a28d' : '#cf7760',
+          p,
+          0,
+          0.12,
+          0,
+        ).scaling.set(1.2, 0.65, 0.8);
+        if (cooked)
+          for (let sear = -1; sear <= 1; sear++)
+            this.roundedBox(
+              'seared protein mark',
+              0.2,
+              0.014,
+              0.022,
+              0.006,
+              '#f1bd74',
+              p,
+              sear * 0.09,
+              0.205,
+              0,
+              0.5,
+            );
+      }
+    } else if (/(tide|olive|lantern|orbit)-late-(raw|prepared|cooked)$/.test(item.kind)) {
+      const region = item.kind.split('-')[0];
+      const cooked = item.kind.endsWith('-cooked');
+      if (region === 'tide') {
+        for (let roe = 0; roe < 12; roe++)
+          this.sphere(
+            'roe pearls',
+            0.045,
+            cooked ? '#ed885d' : '#e9a55f',
+            p,
+            Math.sin(roe * 2.4) * 0.16,
+            0.1 + (roe % 3) * 0.03,
+            Math.cos(roe * 2.4) * 0.14,
+          );
+      } else if (region === 'olive') {
+        for (let cube = 0; cube < 5; cube++)
+          this.roundedBox(
+            'fresh cheese cube',
+            0.12,
+            0.11,
+            0.1,
+            0.025,
+            cooked ? '#d8ad5b' : '#f4e3b7',
+            p,
+            Math.sin(cube * 1.25) * 0.16,
+            0.1,
+            Math.cos(cube * 1.25) * 0.14,
+          );
+      } else if (region === 'lantern') {
+        for (let fold = 0; fold < 4; fold++)
+          this.sphere(
+            'dumpling wrapper parcel',
+            0.14,
+            cooked ? '#d39a5e' : '#f1ddb4',
+            p,
+            (fold - 1.5) * 0.13,
+            0.13,
+            Math.sin(fold) * 0.08,
+          ).scaling.set(1, 0.75, 0.65);
+      } else {
+        for (let leafIndex = 0; leafIndex < 6; leafIndex++)
+          leaf(
+            'comet greens',
+            Math.sin(leafIndex * 1.05) * 0.13,
+            0.12,
+            Math.cos(leafIndex * 1.05) * 0.13,
+            leafIndex,
+            0.56,
+          );
+      }
     } else if (cuisineFood(this.art(), p, item.kind)) {
       // Recipe-specific geometry supplied by the shared art catalogue.
     } else {
@@ -2597,6 +3380,20 @@ export class KitchenScene {
         0.65,
       );
     }
+    // The actual third recipe component distinguishes regional finished dishes.
+    // Reuse its existing prepared model rather than inventing new recipe ingredients.
+    if (recipe && /^(tide|olive|lantern)-/.test(recipe.id)) {
+      const kind = recipe.components[2];
+      const component = this.food({ id: 'plating-accent', kind, parts: [] });
+      component.parent = p;
+      component.position.set(0, recipe.id.startsWith('tide') ? 0.27 : 0.23, 0.13);
+      component.scaling.setAll(0.66);
+    }
+    this.batchStatic(p);
+    p.getChildMeshes().forEach((mesh) => {
+      mesh.isPickable = false;
+      this.shadows.removeShadowCaster(mesh);
+    });
     return p;
   }
   private pose(
@@ -2608,6 +3405,8 @@ export class KitchenScene {
   ) {
     if (!rig) return;
     const running = this.state?.phase === 'playing' && !this.reducedMotion;
+    const expression = chefExpression(this.state, id, this.presentation.pulse(`chef:${id}`));
+    this.animateFace(rig, expression, running);
     const stride = running && walking ? Math.sin(this.time * 11) : 0;
     const idle = running && !walking ? Math.sin(this.time * 2.2) : 0;
     let pulse = running && !walking ? this.presentation.pulse(`chef:${id}`) : 0;
@@ -2616,22 +3415,79 @@ export class KitchenScene {
       for (const station of this.state?.stations ?? [])
         if (Math.hypot(chef.x - station.x, chef.z - station.z) <= 1.05)
           pulse = Math.max(pulse, this.presentation.pulse(`station:${station.id}`));
-    const blend = 1 - Math.exp(-18 * Math.min(0.1, this.engine.getDeltaTime() / 1000));
+    const blend = 1 - Math.exp(-18 * Math.min(0.1, this.frameDeltaMs / 1000));
     const work = pulse * Math.sin(this.time * 20);
     const reach = action === 'seat' ? -1.7 : action === 'sink' ? -1.1 : -0.9;
     const left = carrying ? -1.35 : stride * 0.6 + pulse * reach;
     const right = carrying ? -1.35 : -stride * 0.6 + pulse * reach + work * 0.35;
     rig.leftArm.rotation.x += (left - rig.leftArm.rotation.x) * blend;
     rig.rightArm.rotation.x += (right - rig.rightArm.rotation.x) * blend;
-    rig.torso.scaling.y = 1 + idle * 0.018;
-    rig.head.rotation.x = pulse * 0.1;
-    rig.head.rotation.z = running ? Math.sin(this.time * 1.4) * 0.025 : 0;
+    rig.torso.scaling.y = 1 + idle * 0.02 - pulse * 0.06;
+    rig.torso.scaling.x = 1 + pulse * 0.045;
+    rig.head.rotation.x = -0.22 + pulse * 0.14 + (expression === 'disappointed' ? 0.14 : 0);
+    rig.head.rotation.z = running
+      ? Math.sin(this.time * 1.4) * 0.025 +
+        (expression === 'confused' ? 0.13 : expression === 'proud' ? -0.07 : 0)
+      : 0;
     rig.leftArm.rotation.z = -stride * 0.42 - (carrying ? 0.18 : 0) + idle * 0.035;
     rig.rightArm.rotation.z = stride * 0.42 + (carrying ? 0.18 : 0) - idle * 0.035;
     rig.leftLeg.rotation.x = stride * 0.7;
     rig.rightLeg.rotation.x = -stride * 0.7;
     // A visual-only scale keeps the tile, collision and hand ownership unchanged.
-    rig.root.scaling.setAll(this.cameraFrame?.profile === 'desktop-overview' ? 1 : 1.22);
+    const cameraScale = this.cameraFrame?.profile === 'desktop-overview' ? 1 : 1.22;
+    rig.root.scaling.setAll(cameraScale * (1 + pulse * 0.035));
+  }
+
+  private createCharacterFace(head: TransformNode) {
+    let material = this.textureMaterials.get('shared-face-atlas');
+    if (!material) {
+      const texture = new DynamicTexture('eight-mood-face-atlas', 512, this.scene, true);
+      paintFaceAtlas(texture.getContext() as unknown as CanvasRenderingContext2D);
+      texture.hasAlpha = true;
+      texture.anisotropicFilteringLevel = 4;
+      texture.update(false);
+      material = new PBRMaterial('shared-face-atlas', this.scene);
+      material.albedoTexture = texture;
+      material.useAlphaFromAlbedoTexture = true;
+      material.transparencyMode = PBRMaterial.PBRMATERIAL_ALPHATEST;
+      material.backFaceCulling = false;
+      material.unlit = true;
+      this.textureMaterials.set('shared-face-atlas', material);
+    }
+    const mesh = new Mesh('character expression surface', this.scene);
+    const data = new VertexData(),
+      positions: number[] = [],
+      indices: number[] = [];
+    for (let row = 0; row <= 4; row++)
+      for (let col = 0; col <= 6; col++) {
+        const x = (col / 6 - 0.5) * 0.64,
+          y = (0.5 - row / 4) * 0.55;
+        const z =
+          0.035 + 0.418 * Math.sqrt(Math.max(0, 1 - (x / 0.475) ** 2 - (y / 0.423) ** 2)) + 0.01;
+        positions.push(x, y, z);
+        if (col < 6 && row < 4) {
+          const i = row * 7 + col;
+          indices.push(i, i + 7, i + 1, i + 1, i + 7, i + 8);
+        }
+      }
+    data.positions = positions;
+    data.indices = indices;
+    data.normals = [];
+    VertexData.ComputeNormals(positions, indices, data.normals);
+    data.uvs = faceUVs('neutral', false);
+    data.applyToMesh(mesh, true);
+    mesh.parent = head;
+    mesh.material = material;
+    mesh.isPickable = false;
+    return mesh;
+  }
+  private animateFace(rig: CharacterRig, expression: FaceExpression, enabled: boolean) {
+    const closed = blinkAmount(this.time, rig.blinkOffset, !enabled) > 0.45;
+    const key = expression + ':' + closed;
+    if (key === rig.faceKey) return;
+    rig.faceKey = key;
+    rig.face.updateVerticesData(VertexBuffer.UVKind, faceUVs(expression, closed));
+    rig.face.metadata = { expression, closed };
   }
 
   setLabels(labels: { id: string; node: HTMLElement }[]) {
@@ -2643,6 +3499,7 @@ export class KitchenScene {
       const content = getLevel(state.levelId);
       this.layout = content.stations;
       this.restaurantId = content.restaurantId;
+      this.cat.setStations(this.layout);
       this.items.forEach((i) => i.node.dispose());
       this.items.clear();
       this.buildKitchen();
@@ -2683,7 +3540,11 @@ export class KitchenScene {
         if (c.item) {
           actor.held = this.food(c.item);
           actor.held.parent = actor.node;
-          actor.held.position.set(0, 0.78, 0.51);
+          actor.held.position.copyFromFloats(
+            characterArtContract.heldAnchor.x,
+            characterArtContract.heldAnchor.y,
+            characterArtContract.heldAnchor.z,
+          );
         }
       }
       actor.node.getChildMeshes().forEach((m) => (m.visibility = c.connected ? 1 : 0.45));
@@ -2697,7 +3558,11 @@ export class KitchenScene {
       if (chef?.item) {
         this.held = this.food(chef.item);
         this.held.parent = this.chef;
-        this.held.position.set(0, 0.78, 0.51);
+        this.held.position.copyFromFloats(
+          characterArtContract.heldAnchor.x,
+          characterArtContract.heldAnchor.y,
+          characterArtContract.heldAnchor.z,
+        );
       }
     }
     for (const station of state.stations) {
@@ -2708,12 +3573,12 @@ export class KitchenScene {
       if (heat && this.stationHeatStates.get(id) !== station.phase) {
         const color =
           station.phase === 'burnt'
-            ? '#392f2a'
+            ? '#F4513D'
             : station.phase === 'ready'
-              ? '#79a85d'
+              ? '#8BE0BD'
               : station.phase === 'processing'
-                ? '#e8914e'
-                : '#586a66';
+                ? '#FFC72C'
+                : '#3C4960';
         heat.material = this.mat(color, 0.38, 0.06);
         this.stationHeatStates.set(id, station.phase);
       }
@@ -2722,7 +3587,7 @@ export class KitchenScene {
         this.items.delete(id);
         if (item) {
           const node = this.food(item);
-          node.metadata = { station: id };
+          node.metadata = { ...node.metadata, station: id };
           node.position = this.world(station);
           node.position.y =
             station.id === 'stove' && ['tide', 'olive', 'lantern'].includes(this.restaurantId)
@@ -2740,9 +3605,11 @@ export class KitchenScene {
       if (!active.has(id)) {
         node.dispose();
         this.rigs.delete(id);
+        this.guestsFed.delete(id);
         this.guests.delete(id);
       }
     state.customers.forEach((c, i) => {
+      if (c.state === 'Eating') this.guestsFed.add(c.id);
       let node = this.guests.get(c.id);
       if (!node) {
         const colors = {
@@ -2812,7 +3679,7 @@ export class KitchenScene {
         this.guests.set(c.id, node);
       }
       const seat = this.layout.find((s) => s.id === c.seat);
-      node.metadata = seat ? { station: seat.id } : null;
+      node.metadata = { ...node.metadata, station: seat?.id };
       if (seat) {
         const rig = this.rigs.get(c.id);
         if (rig) rig.leftLeg.rotation.x = rig.rightLeg.rotation.x = -1.0;
@@ -2826,12 +3693,19 @@ export class KitchenScene {
     });
   }
   private animate() {
-    this.frameSamples[this.frameIndex] = this.engine.getDeltaTime();
+    this.frameSamples[this.frameIndex] = this.frameDeltaMs;
     this.frameIndex = (this.frameIndex + 1) % this.frameSamples.length;
     this.frameCount = Math.min(this.frameCount + 1, this.frameSamples.length);
-    const dt = Math.min(0.25, this.engine.getDeltaTime() / 1000);
+    // Engine delta covers the display tick, including ticks skipped by our render cap.
+    // Use the interval between submitted frames so 30 FPS does not halve animation speed.
+    const dt = Math.min(0.25, this.frameDeltaMs / 1000);
     this.time += dt;
-    let budget = effectBudget(this.quality === 'low', this.reducedMotion);
+    this.cat.update(dt, this.reducedMotion, this.state?.phase === 'playing');
+    let budget = effectBudget(
+      this.quality === 'low',
+      this.reducedMotion,
+      navigator.maxTouchPoints > 0,
+    );
     let activeEffects = 0;
     for (const station of this.state?.stations ?? []) {
       const particles = this.effects.get(station.id);
@@ -2843,9 +3717,11 @@ export class KitchenScene {
       for (let i = 0; i < particles.length; i++) {
         const mesh = particles[i];
         const knife = mesh.name === 'chopping blade';
+        const burst = mesh.name === 'comic completion burst';
         const enabled =
           active &&
           (!knife || (pulse > 0 && station.progress > 0)) &&
+          (!burst || (pulse > 0 && (station.phase === 'ready' || station.kind === 'seat'))) &&
           budget > 0 &&
           (this.quality !== 'low' || i === 0);
         mesh.setEnabled(enabled);
@@ -2856,22 +3732,37 @@ export class KitchenScene {
         const prep = station.kind === 'board';
         const burnt = station.phase === 'burnt';
         const ready = station.phase === 'ready' || station.kind === 'seat';
-        mesh.material = this.mat(
-          burnt ? '#62594e' : sink ? '#acdfe9' : ready ? '#edc566' : '#f0e7d8',
-        );
+        const effectColor = burnt
+          ? '#F4513D'
+          : sink
+            ? '#65C9DB'
+            : ready
+              ? '#FFC72C'
+              : prep
+                ? '#8BE0BD'
+                : station.id === 'mixer'
+                  ? '#6937C8'
+                  : '#F07B32';
+        mesh.material = this.mat(effectColor);
         const t = (this.time * (prep ? 2.2 : 0.85) + i / 3) % 1;
         mesh.position.y = 1.13 + t * (prep ? 0.2 : 0.65);
         mesh.position.x = Math.cos(this.time * (prep ? 5 : 2) + i * 2.1) * 0.22;
         mesh.position.z = Math.sin(this.time * (prep ? 5 : 2) + i * 2.1) * 0.22;
         mesh.scaling.setAll((sink ? 0.65 : 0.5) + t * 0.7);
         mesh.visibility = (burnt ? 0.5 : 0.65) * (1 - t);
+        if (burst) {
+          mesh.position.set(0, 1.22, 0);
+          mesh.rotation.y = this.time * 0.4;
+          mesh.scaling.setAll(0.9 + (1 - pulse) * 0.5);
+          mesh.visibility = pulse * 0.75;
+        }
         if (knife) {
-          mesh.material = this.mat('#b8c8c6');
+          mesh.material = this.mat('#3C4960');
           mesh.position.set(0, 1.18 + Math.abs(Math.sin(this.time * 20)) * 0.18, 0);
           mesh.scaling.setAll(1);
           mesh.visibility = 1;
         } else if (station.kind === 'stove' && processing && i === 0) {
-          mesh.material = this.mat('#efa44e');
+          mesh.material = this.mat('#F4513D');
           mesh.position.y = 0.98;
           mesh.scaling.set(0.7, 1 + Math.sin(this.time * 9) * 0.25, 0.7);
           mesh.visibility = 0.75;
@@ -2893,8 +3784,27 @@ export class KitchenScene {
         effectiveScale: this.engine.getRenderWidth() / Math.max(1, rect.width),
         profile: this.quality === 'standard' ? 'balanced' : this.quality,
         sharpness: this.sharpness,
-        fps: this.engine.getFps(),
-        frameMs: this.engine.getDeltaTime(),
+        fps:
+          1000 /
+          Math.max(1, samples.reduce((sum, value) => sum + value, 0) / Math.max(1, samples.length)),
+        targetFps: this.renderTargetFps,
+        shadowMapSize: this.shadows.mapSize,
+        shadowMode: this.shadows.usePoissonSampling ? 'poisson' : 'blur',
+        renderedFrames: this.renderedFrames,
+        shadowRenderedFrames: this.shadowRenderedFrames,
+        faces: [...this.rigs.values()].map((rig) => rig.faceKey),
+        characterArtVersion: characterArtContract.version,
+        sceneBuildMs: this.sceneBuildMs,
+        sceneReadyMs: this.sceneReadyMs,
+        characterSlots: [...this.rigs.values()].map((rig) => Object.keys(rig.slots)),
+        characterBindingsValid: [...this.rigs.values()].every(
+          (rig) =>
+            rig.root.metadata?.artVersion === characterArtContract.version &&
+            Object.entries(rig.slots).every(
+              ([slot, node]) => node.name === rig.root.metadata?.slots?.[slot],
+            ),
+        ),
+        frameMs: this.frameDeltaMs,
         frameMean: samples.reduce((sum, value) => sum + value, 0) / Math.max(1, samples.length),
         frameP95: samples[Math.floor((samples.length - 1) * 0.95)],
         frameP99: samples[Math.floor((samples.length - 1) * 0.99)],
@@ -2921,9 +3831,12 @@ export class KitchenScene {
         meshes: this.scene.meshes.length,
         activeMeshes: this.scene.getActiveMeshes().length,
         drawCalls: this.instrumentation.drawCallsCounter.current,
+        drawCallsMean:
+          this.drawSamples.subarray(0, this.frameCount).reduce((sum, n) => sum + n, 0) /
+          Math.max(1, this.frameCount),
         materials: this.scene.materials.length,
         uniqueGeometries: geometries.size,
-        fps: Math.round(this.engine.getFps()),
+        fps: Math.round(info.fps),
         triangles: this.scene.meshes.reduce((sum, m) => sum + m.getTotalIndices(), 0) / 3,
         geometryBytesEstimated,
         textureBytesEstimated,
@@ -2934,10 +3847,11 @@ export class KitchenScene {
     for (const [id, actor] of this.teammates) {
       const player = this.state?.chefs[id];
       if (!player) continue;
-      const target = this.world(player);
-      const direction = target.subtract(actor.node.position);
-      if (direction.length() > 0.025) actor.node.rotation.y = Math.atan2(direction.x, direction.z);
-      actor.node.position = Vector3.Lerp(actor.node.position, target, 1 - Math.exp(-18 * dt));
+      const target = this.movementTarget.set(player.x - 7, 0, player.z - 5);
+      const dx = target.x - actor.node.position.x,
+        dz = target.z - actor.node.position.z;
+      if (Math.hypot(dx, dz) > 0.025) actor.node.rotation.y = Math.atan2(dx, dz);
+      Vector3.LerpToRef(actor.node.position, target, 1 - Math.exp(-18 * dt), actor.node.position);
       actor.node.position.y =
         !this.reducedMotion && player.path.length ? Math.abs(Math.sin(this.time * 13)) * 0.08 : 0;
       this.pose(
@@ -2963,13 +3877,15 @@ export class KitchenScene {
     }
     const c = this.state?.chefs[this.playerId];
     if (c) {
-      const dest = this.world(c);
+      const dest = this.movementTarget.set(c.x - 7, 0, c.z - 5);
       const moving = Vector3.Distance(this.chef.position, dest) > 0.025;
       if (moving) {
-        const d = dest.subtract(this.chef.position);
-        this.chef.rotation.y = Math.atan2(d.x, d.z);
+        this.chef.rotation.y = Math.atan2(
+          dest.x - this.chef.position.x,
+          dest.z - this.chef.position.z,
+        );
       }
-      this.chef.position = Vector3.Lerp(this.chef.position, dest, 1 - Math.exp(-18 * dt));
+      Vector3.LerpToRef(this.chef.position, dest, 1 - Math.exp(-18 * dt), this.chef.position);
       this.chef.position.y =
         !this.reducedMotion && c.path.length && this.state?.phase === 'playing'
           ? Math.abs(Math.sin(this.time * 13)) * 0.08
@@ -2978,15 +3894,13 @@ export class KitchenScene {
       const destination = c.path.at(-1);
       this.marker.setEnabled(Boolean(destination));
       if (destination) {
-        this.marker.position.copyFrom(this.world(destination));
-        this.marker.position.y = 0.045;
+        this.marker.position.set(destination.x - 7, 0.045, destination.z - 5);
       }
       this.routeDots.forEach((dot, index) => {
         const point = c.path[index];
         dot.setEnabled(Boolean(point));
         if (point) {
-          dot.position.copyFrom(this.world(point));
-          dot.position.y = 0.04;
+          dot.position.set(point.x - 7, 0.04, point.z - 5);
         }
       });
       if (this.cameraOverview || !this.cameraFrame) {
@@ -3007,12 +3921,32 @@ export class KitchenScene {
         const n = this.guests.get(c.id);
         const rig = this.rigs.get(c.id);
         if (rig) {
+          this.animateFace(
+            rig,
+            c.state === 'Eating'
+              ? 'happy'
+              : c.state === 'Leaving'
+                ? this.guestsFed.has(c.id)
+                  ? 'proud'
+                  : 'disappointed'
+                : c.patience < Math.min(20, c.maxPatience * 0.25)
+                  ? 'focused'
+                  : 'neutral',
+            !this.reducedMotion,
+          );
           const motion = this.reducedMotion
             ? 0
             : Math.sin(this.time * (c.state === 'Eating' ? 6 : 2.5));
           const urgent = c.patience < Math.min(20, c.maxPatience * 0.25);
+          const reaction = this.reducedMotion ? 0 : this.presentation.pulse(`guest:${c.id}`);
           rig.rightArm.rotation.x =
-            c.state === 'Eating' ? -1.1 + motion * 0.2 : urgent ? -0.8 : motion * 0.08;
+            c.state === 'Eating'
+              ? -1.1 + motion * 0.2 - reaction * 0.35
+              : urgent
+                ? -0.8
+                : motion * 0.08;
+          rig.leftArm.rotation.x = c.state === 'Eating' ? -0.85 - reaction * 0.25 : 0;
+          rig.head.rotation.x = -0.22 + (c.state === 'Eating' ? -0.08 - reaction * 0.08 : 0);
           rig.head.rotation.z = motion * (urgent ? 0.09 : 0.025);
           rig.torso.rotation.x = c.state === 'Leaving' ? 0.12 : 0;
         }
@@ -3033,6 +3967,27 @@ export class KitchenScene {
     const rect = this.canvas.getBoundingClientRect();
     const viewport = this.camera.viewport.toGlobal(w, h);
     const transform = this.scene.getTransformMatrix();
+    const localChef = this.state?.chefs[this.playerId];
+    const showCatAction =
+      document.body.dataset.screen === 'game' &&
+      this.state?.phase === 'playing' &&
+      this.cat.isNear(localChef);
+    this.catAction.hidden = !showCatAction;
+    if (showCatAction) {
+      this.labelWorld.set(this.cat.position.x, 1.47, this.cat.position.z);
+      Vector3.ProjectToRef(
+        this.labelWorld,
+        Matrix.IdentityReadOnly,
+        transform,
+        viewport,
+        this.labelProjection,
+      );
+      const x = rect.left + (this.labelProjection.x / w) * rect.width;
+      const y = rect.top + (this.labelProjection.y / h) * rect.height;
+      const inset = Math.min(70, rect.width / 2);
+      this.catAction.style.left = `${Math.max(rect.left + inset, Math.min(rect.right - inset, x))}px`;
+      this.catAction.style.top = `${Math.max(rect.top + 38, Math.min(rect.bottom - 48, y))}px`;
+    }
     const compactMobile = this.cameraFrame?.profile !== 'desktop-overview';
     let onScreen = 0;
     let edgeMarkers = 0;
@@ -3072,11 +4027,14 @@ export class KitchenScene {
         screenY >= rect.top &&
         screenY <= rect.bottom;
       if (inFrame) onScreen++;
-      const actionable = priority || nearby;
+      const componentSource = id.startsWith('ingredient-');
+      const actionable = priority || nearby || (compactMobile && componentSource);
       const edge = !inFrame && actionable && this.cameraFrame?.profile !== 'desktop-overview';
       if (edge) edgeMarkers++;
       const visible =
-        edge || (inFrame && (!compactMobile || this.showAllStationLabels || priority || nearby));
+        edge ||
+        (inFrame &&
+          (!compactMobile || this.showAllStationLabels || priority || nearby || componentSource));
       const visibility = visible ? 'visible' : 'hidden';
       if (node.style.visibility !== visibility) node.style.visibility = visibility;
       node.style.pointerEvents = visible ? 'auto' : 'none';
@@ -3140,7 +4098,9 @@ export class KitchenScene {
         });
       const placed: DOMRect[] = [];
       visible.forEach((node, index) => {
-        node.dataset.compact = String(!this.showAllStationLabels && index >= 4);
+        node.dataset.compact = String(
+          !this.showAllStationLabels && index >= 4 && node.dataset.componentSource !== 'true',
+        );
       });
       const chef = this.state?.chefs[this.playerId];
       let chefBlock: DOMRect | null = null;

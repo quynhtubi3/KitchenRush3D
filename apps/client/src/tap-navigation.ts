@@ -1,4 +1,5 @@
 import type { Intent, Point, Snapshot, Station } from '../../../packages/shared/src/types';
+import { getLevel, recipeById } from '../../../packages/content/src/campaign';
 import { findPath, key, neighbors } from '../../../packages/shared/src/pathfinding';
 
 // Preview chooses a reachable approach tile; the server still computes and owns movement.
@@ -62,6 +63,15 @@ export class TapNavigation {
     if (!pending) return null;
     const chef = state.chefs[id];
     const station = state.stations.find((s) => s.id === pending.station);
+    const stationItemChanged = (station?.item?.id ?? '') !== pending.stationItem;
+    const assemblyBecameReady =
+      stationItemChanged &&
+      station?.kind === 'assembly' &&
+      pending.stationItem === '' &&
+      station.item?.kind === 'plate' &&
+      chef?.item !== null &&
+      chef?.item !== undefined &&
+      this.canAddToPlate(state, station, chef.item.kind);
     if (
       !chef ||
       !station ||
@@ -69,16 +79,30 @@ export class TapNavigation {
       state.phase !== 'playing' ||
       now - pending.at > 15000 ||
       (chef.item?.id ?? '') !== pending.item ||
-      (station.item?.id ?? '') !== pending.stationItem
+      (stationItemChanged && !assemblyBecameReady)
     ) {
       this.cancel();
       return null;
     }
+    if (assemblyBecameReady) pending.stationItem = station.item!.id;
     if (chef.path.length || Math.hypot(chef.x - pending.goal.x, chef.z - pending.goal.z) > 0.01)
       return null;
     this.cancel();
     return pending.automatic && Math.hypot(chef.x - station.x, chef.z - station.z) <= 1.05
       ? { type: 'interact', station: station.id }
       : null;
+  }
+  private canAddToPlate(state: Snapshot, station: Station, kind: string) {
+    if (station.kind !== 'assembly' || station.item?.kind !== 'plate') return false;
+    const recipeIds = station.item.assemblyRecipe
+      ? [station.item.assemblyRecipe]
+      : getLevel(state.levelId).recipes;
+    return recipeIds.some((id) => {
+      const recipe = recipeById(id);
+      return (
+        recipe.components.includes(kind) &&
+        station.item!.parts.every((part) => recipe.components.includes(part))
+      );
+    });
   }
 }

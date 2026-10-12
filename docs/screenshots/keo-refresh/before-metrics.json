@@ -1,0 +1,19 @@
+{
+  "standing": {
+    "meshes": 27,
+    "triangles": 37582
+  },
+  "lying": {
+    "meshes": 27,
+    "triangles": 37582
+  },
+  "top": {
+    "meshes": 27,
+    "triangles": 37582
+  },
+  "walking": {
+    "meshes": 27,
+    "triangles": 37582
+  },
+  "errors": []
+}

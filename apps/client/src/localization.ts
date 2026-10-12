@@ -45,6 +45,12 @@ const copy = {
     copyLinkFailed: 'Không thể sao chép. Hãy chia sẻ mã phòng đang hiển thị.',
     recoveringItems: 'Đồ được thu hồi',
     teamResult: 'Kết quả đội',
+    continueNext: 'Cả đội chơi màn tiếp',
+    retryTogether: 'Chơi lại cùng đội',
+    waitingForHost: 'Chủ phòng sẽ đưa cả đội về sảnh.',
+    teamStreak: 'Chuỗi thắng của đội',
+    crewRoleTip: 'Mẹo đội: chia nhau sơ chế, bếp, phục vụ và dùng dấu để gọi trạm.',
+    teamRelay: 'Chuyền món trong đội! +50 điểm',
     coopPause: 'Trận co-op vẫn tiếp tục khi xem menu hoặc công thức.',
     tagline: 'BẾP NHỎ. NIỀM VUI LỚN.',
     title: 'Một chút nắng.\nMột bữa thật ngon.',
@@ -101,7 +107,20 @@ const copy = {
     disconnected: 'Mất kết nối. Đang thử kết nối lại…',
     connectionFailed: 'Không kết nối được với bếp. Kiểm tra server và thử lại.',
     retry: 'Thử lại',
-    webgl: 'Thiết bị chưa hỗ trợ WebGL. Hãy bật tăng tốc đồ họa hoặc thử trình duyệt khác.',
+    webgl: 'Không thể khởi động game.',
+    startupGeneralHint:
+      'Game gặp lỗi khi khởi động. Hãy thử tải lại; nếu lỗi vẫn còn, mở bằng một trình duyệt khác và gửi kèm thông tin kỹ thuật bên dưới.',
+    webglIosHint:
+      'Có thể trình duyệt nhúng của Zalo không cấp quyền đồ họa 3D. Mở menu … của Zalo rồi chọn Mở bằng Safari. Nếu không thấy lựa chọn này, hãy sao chép liên kết và dán vào Safari.',
+    webglAndroidHint:
+      'Có thể trình duyệt nhúng chưa bật đồ họa 3D. Mở trang này trong Chrome; nếu vẫn lỗi, thử cập nhật Chrome và Android System WebView.',
+    webglDesktopHint:
+      'Hãy thử phiên bản mới nhất của Chrome, Edge, Firefox hoặc Safari. Trên máy tính, kiểm tra cài đặt tăng tốc đồ họa rồi khởi động lại trình duyệt.',
+    copyGameLink: 'Sao chép liên kết game',
+    linkCopied: 'Đã sao chép liên kết',
+    copyPrompt: 'Hãy sao chép liên kết này rồi mở bằng Safari hoặc trình duyệt ngoài:',
+    tryAgain: 'Thử tải lại',
+    technicalDetails: 'Thông tin kỹ thuật (chỉ lưu trên thiết bị)',
     best: 'Kỷ lục trên thiết bị',
     close: 'Đóng',
     tutorial: 'Gợi ý đầu ca',
@@ -150,6 +169,10 @@ const copy = {
     serverSavePending: 'Đang xác nhận lưu kết quả…',
     serverSaveFailed: 'Chưa xác nhận được kết quả trên máy chủ',
     storageUnavailable: 'Không lưu được kết quả trên thiết bị này',
+    saveProgressNudge:
+      'Tạo tài khoản hoặc đăng nhập để đồng bộ tiến trình và chơi tiếp trên thiết bị khác.',
+    saveProgressCta: 'Đăng nhập để lưu tiến trình',
+    dismissNudge: 'Để sau',
   },
   en: {
     cookTogether: 'Cook together',
@@ -196,6 +219,12 @@ const copy = {
     copyLinkFailed: 'Could not copy. Share the displayed room code instead.',
     recoveringItems: 'Recovered items',
     teamResult: 'Team result',
+    continueNext: 'Play the next shift together',
+    retryTogether: 'Replay with the team',
+    waitingForHost: 'The host will bring the team back to the lobby.',
+    teamStreak: 'Crew win streak',
+    crewRoleTip: 'Crew tip: split prep, cooking and serving, and ping stations for help.',
+    teamRelay: 'Crew hand-off! +50 points',
     coopPause: 'Co-op keeps running while viewing menus or recipes.',
     tagline: 'SMALL KITCHEN. BIG JOY.',
     title: 'A little sunshine.\nA lot of good food.',
@@ -252,7 +281,20 @@ const copy = {
     disconnected: 'Connection lost. Reconnecting…',
     connectionFailed: 'Could not reach the kitchen. Check the server and try again.',
     retry: 'Try again',
-    webgl: 'WebGL is unavailable. Enable hardware acceleration or try another browser.',
+    webgl: 'The game could not start.',
+    startupGeneralHint:
+      'The game hit an error while starting. Try reloading; if it persists, open it in another browser and include the technical details below when reporting it.',
+    webglIosHint:
+      'Zalo’s in-app browser may not provide WebGL. Open Zalo’s … menu and choose Open in Safari. If that option is missing, copy this link and paste it into Safari.',
+    webglAndroidHint:
+      'This in-app browser may not provide WebGL. Open the page in Chrome; if it still fails, update Chrome and Android System WebView.',
+    webglDesktopHint:
+      'Try the latest Chrome, Edge, Firefox, or Safari. On desktop, check hardware acceleration and restart the browser.',
+    copyGameLink: 'Copy game link',
+    linkCopied: 'Link copied',
+    copyPrompt: 'Copy this link and open it in Safari or another browser:',
+    tryAgain: 'Try again',
+    technicalDetails: 'Technical details (stored on this device only)',
     best: 'Best on this device',
     close: 'Close',
     tutorial: 'Your first shift',
@@ -302,6 +344,10 @@ const copy = {
     serverSavePending: 'Confirming result storage…',
     serverSaveFailed: 'Server result storage has not been confirmed',
     storageUnavailable: 'Could not save on this device',
+    saveProgressNudge:
+      'Create an account or sign in to sync your progress and continue on another device.',
+    saveProgressCta: 'Sign in to save progress',
+    dismissNudge: 'Later',
   },
 } as const;
 export type CopyKey = keyof typeof copy.vi;

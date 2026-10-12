@@ -12,6 +12,7 @@ import {
   levels,
   restaurants,
   recipeById,
+  dishRecipe,
   items,
   customerTypes,
   unlockedLevels,
@@ -31,6 +32,7 @@ import { loadPreferences, savePreferences, type Preferences } from './preference
 import { SettingsPanel } from './settings';
 import { keyboardDirection, movementTarget, MobileControls } from './mobile-controls';
 import { customerUrgent, stationFeedback, FeedbackCues } from './feedback';
+import { popCore, popSemantic, restaurantPopTheme } from './game/chaotic-pop-theme';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const renderedHTML = new WeakMap<HTMLElement, string>();
@@ -58,9 +60,38 @@ try {
 let tutorialSkipped = false;
 const accountClient = new AccountClient();
 let accountOpen = false;
+let accountAuthMode: 'login' | 'register' = 'login';
+let saveProgressNudgeDismissed = false;
 let accountMessage = '';
 let accountReady: Promise<unknown> = Promise.resolve();
+let pendingAccountAction: { purpose: 'verifyEmail' | 'resetPassword'; token: string } | null = null;
+try {
+  const url = new URL(window.location.href);
+  const actionParams = new URLSearchParams(url.hash.slice(1));
+  const verifyEmail = actionParams.get('verifyEmail') ?? url.searchParams.get('verifyEmail');
+  const resetPassword = actionParams.get('resetPassword') ?? url.searchParams.get('resetPassword');
+  if (verifyEmail) pendingAccountAction = { purpose: 'verifyEmail', token: verifyEmail };
+  else if (resetPassword) pendingAccountAction = { purpose: 'resetPassword', token: resetPassword };
+  if (pendingAccountAction) {
+    accountOpen = true;
+    url.searchParams.delete('verifyEmail');
+    url.searchParams.delete('resetPassword');
+    url.hash = '';
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+} catch {}
 const currentContent = () => getLevel(state?.levelId ?? selectedLevel);
+const recipeIcon = (id: string) => {
+  if (id.includes('chicken') || id.includes('friedChicken')) return '🍗';
+  if (id.includes('fries')) return '🍟';
+  if (id.includes('cheese')) return '🧀';
+  if (id.startsWith('tide-'))
+    return id.includes('signature-b') || id.includes('signature-c') ? '🍣' : '🍙';
+  if (id.startsWith('olive-')) return id.includes('signature-c') ? '🧀' : '🍝';
+  if (id.startsWith('lantern-')) return id.includes('signature-c') ? '🥟' : '🍜';
+  if (id.startsWith('orbit-')) return '🪐';
+  return '🍔';
+};
 const stationName = (s: Station | { id: string; ingredient?: string }) =>
   s.ingredient ? tr(s.ingredient) : tr(s.id);
 function levelOptions() {
@@ -129,6 +160,7 @@ const client = new Client(endpoint);
 const feedbackCues = new FeedbackCues();
 const tapNavigation = new TapNavigation();
 let trackedOrder: string | undefined;
+let notebookRecipe: string | undefined;
 let rotationDismissed = false;
 const mobileControls = new MobileControls(
   () => ({
@@ -156,23 +188,75 @@ function accountPanel() {
   const state = accountClient.state;
   const vi = language === 'vi';
   const message = accountMessage || state.error;
+  const pendingActionPanel = pendingAccountAction
+    ? pendingAccountAction.purpose === 'verifyEmail'
+      ? `<div class="account-actions"><button class="primary" data-action="account-verify-email">${vi ? 'Xác nhận email' : 'Confirm email'}</button></div>`
+      : `<label>${vi ? 'Mật khẩu mới (10–128 ký tự)' : 'New password (10–128 characters)'}<input id="account-recovery-password" type="password" autocomplete="new-password" minlength="10" maxlength="128"></label><div class="account-actions"><button class="primary" data-action="account-reset-password">${vi ? 'Đặt lại mật khẩu' : 'Reset password'}</button></div>`
+    : '';
+  const actionNotice = state.verificationPending
+    ? `<p class="account-note" role="status">${vi ? 'Nếu địa chỉ có thể đăng ký, email xác minh sẽ được gửi. Hãy kiểm tra hộp thư và thư rác.' : 'If this address can be registered, a verification email is on its way. Check your inbox and spam folder.'}</p>`
+    : '';
   const legacy = state.progress?.legacyProgressIsUnverified
-    ? `<p class="account-note">${vi ? 'Tiến trình cũ đã được lưu để đối chiếu; chưa mở khóa màn vì dữ liệu localStorage không có chữ ký xác thực.' : 'Legacy progress was archived for review; unsigned localStorage data does not unlock levels.'}</p>`
+    ? `<p class="account-note">${vi ? 'Tiến trình Guest cũ được lưu riêng để đối chiếu; dữ liệu chưa xác minh không mở khóa màn.' : 'Legacy Guest progress is archived separately. It is unverified and does not unlock levels.'}</p>`
     : '';
   if (!state.configured)
-    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${vi ? 'Khách · lưu trên thiết bị' : 'Guest · saved on this device'}</strong><p>${vi ? 'Tài khoản máy chủ cần PostgreSQL được cấu hình.' : 'Server accounts require PostgreSQL to be configured.'}</p></section>`;
+    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${vi ? 'Khách · lưu trên thiết bị' : 'Guest · saved on this device'}</strong><p>${vi ? 'Bạn vẫn có thể chơi Solo và Multiplayer.' : 'Solo and multiplayer remain available.'}</p>${pendingActionPanel}</section>`;
   if (!state.available)
-    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${vi ? 'Đồng bộ tài khoản tạm thời không khả dụng' : 'Account sync is temporarily unavailable'}</strong><p>${escapeHTML(message || (vi ? 'Không kết nối được cơ sở dữ liệu.' : 'Database is not responding.'))}</p></section>`;
-  if (!state.account) return '';
+    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${vi ? 'Đồng bộ tài khoản tạm thời không khả dụng' : 'Account sync is temporarily unavailable'}</strong><p>${escapeHTML(message || (vi ? 'Không kết nối được cơ sở dữ liệu.' : 'Database is not responding.'))}</p>${pendingActionPanel}</section>`;
+  if (!state.account)
+    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${vi ? 'Hồ sơ Guest' : 'Guest profile'}</strong><p>${escapeHTML(message)}</p>${pendingActionPanel}</section>`;
   const identity = escapeHTML(state.account.displayName);
-  if (state.account.isGuest)
-    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${identity}</strong><small>${escapeHTML(state.account.playerCode)} · ${vi ? 'Khách' : 'Guest'}</small><p>${vi ? `${state.progress?.wins.length ?? 0} màn đã đồng bộ với máy chủ.` : `${state.progress?.wins.length ?? 0} levels synced to the server.`}</p>${legacy}<label>${vi ? 'Tên tài khoản' : 'Username'}<input id="account-username" autocomplete="username" minlength="3" maxlength="24"></label><label>${vi ? 'Mật khẩu (10–128 ký tự)' : 'Password (10–128 characters)'}<input id="account-password" type="password" autocomplete="new-password" minlength="10" maxlength="128"></label><div class="account-actions"><button class="primary" data-action="account-register">${vi ? 'Đăng ký & chuyển Guest' : 'Register & migrate Guest'}</button><button data-action="account-login">${vi ? 'Đăng nhập & gộp Guest' : 'Login & merge Guest'}</button></div><p class="account-message" role="status">${escapeHTML(message)}</p></section>`;
-  return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${identity}</strong><small>${escapeHTML(state.account.playerCode)} · ${escapeHTML(state.account.username ?? '')}</small><p>${vi ? `${state.progress?.wins.length ?? 0} màn thắng · đã đồng bộ` : `${state.progress?.wins.length ?? 0} wins · synced`}</p>${legacy}<button data-action="account-logout">${vi ? 'Đăng xuất' : 'Sign out'}</button><p class="account-message" role="status">${escapeHTML(message)}</p></section>`;
+  const wins = state.progress?.wins.length ?? 0;
+  if (state.account.isGuest) {
+    const authForm = state.authEnabled
+      ? `<div class="account-auth" data-mode="${accountAuthMode}">
+          <p class="account-note account-login-only">${vi ? 'Tên Guest ở trên chỉ tạm thời. Khi đăng nhập, game dùng tên đã lưu trong tài khoản của bạn.' : 'The Guest name above is temporary. Signing in uses the name saved on your account.'}</p>
+          ${
+            state.registrationEnabled
+              ? `<div class="account-auth-modes" role="group" aria-label="${vi ? 'Chế độ tài khoản' : 'Account mode'}">
+            <button type="button" data-action="account-auth-mode" data-auth-mode="login" aria-pressed="${accountAuthMode === 'login'}">${vi ? 'Đăng nhập' : 'Sign in'}</button>
+            <button type="button" data-action="account-auth-mode" data-auth-mode="register" aria-pressed="${accountAuthMode === 'register'}">${vi ? 'Tạo tài khoản' : 'Create account'}</button>
+          </div>`
+              : ''
+          }
+          <label>${vi ? 'Email' : 'Email'}<input id="account-email" type="email" autocomplete="email" maxlength="254" inputmode="email"></label>
+          <label class="account-register-only">${vi ? 'Tên hiển thị' : 'Display name'}<input id="account-display-name" autocomplete="nickname" maxlength="32"></label>
+          <p class="account-register-only account-field-help">${vi ? 'Tên này được lưu vào tài khoản; lần đăng nhập sau không cần nhập lại.' : 'This name is saved to your account; you do not enter it again when signing in.'}</p>
+          <label>${vi ? 'Mật khẩu (10–128 ký tự)' : 'Password (10–128 characters)'}<input id="account-password" type="password" autocomplete="${accountAuthMode === 'login' ? 'current-password' : 'new-password'}" minlength="10" maxlength="128"></label>
+          <details class="account-import-options"><summary>${vi ? 'Tiến trình Guest cũ (tùy chọn)' : 'Older Guest progress (optional)'}</summary><label class="account-import"><input id="account-import-progress" type="checkbox">${vi ? 'Gửi bản lưu cũ để lưu trữ đối chiếu; dữ liệu này không mở khóa màn.' : 'Archive an older local save for review; it does not unlock levels.'}</label></details>
+          <div class="account-actions">
+            <button class="primary account-login-only" data-action="account-login">${vi ? 'Đăng nhập' : 'Sign in'}</button>
+            ${state.registrationEnabled ? `<button class="primary account-register-only" data-action="account-register">${vi ? 'Tạo tài khoản & giữ tiến trình Guest' : 'Create account & keep Guest progress'}</button>` : ''}
+          </div>
+          ${state.emailDeliveryConfigured ? `<div class="account-actions account-login-only"><button data-action="account-resend-verification">${vi ? 'Gửi lại email xác minh' : 'Resend verification email'}</button><button data-action="account-request-reset">${vi ? 'Quên mật khẩu?' : 'Forgot password?'}</button></div>` : ''}
+          ${!state.registrationEnabled ? `<p class="account-note">${vi ? 'Đăng ký mới hiện đang tắt.' : 'New registration is currently disabled.'}</p>` : ''}${actionNotice}
+        </div>`
+      : '';
+    return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${identity}</strong><small>${escapeHTML(state.account.playerCode)} · ${vi ? 'Khách' : 'Guest'}</small><p>${state.cloudSaveEnabled ? (vi ? `${wins} màn đã đồng bộ với máy chủ.` : `${wins} levels synced to the server.`) : vi ? 'Tiến trình chỉ lưu trên thiết bị này.' : 'Progress is saved on this device only.'}</p>${legacy}${authForm}${pendingActionPanel}<p class="account-message" role="status">${escapeHTML(message)}</p></section>`;
+  }
+  const created = new Date(state.account.createdAt).toLocaleDateString(vi ? 'vi-VN' : 'en-US');
+  const lastPlayed = state.account.lastPlayedAt
+    ? new Date(state.account.lastPlayedAt).toLocaleDateString(vi ? 'vi-VN' : 'en-US')
+    : vi
+      ? 'chưa chơi'
+      : 'not yet';
+  return `<section class="account-panel"><button class="account-close" data-action="account">×</button><strong>${identity}</strong><small>${escapeHTML(state.account.email ?? state.account.username ?? '')} · ${escapeHTML(state.account.playerCode)}</small><small>${vi ? 'Tham gia' : 'Joined'} ${created} · ${vi ? 'Chơi gần nhất' : 'Last played'} ${lastPlayed}</small><p>${state.cloudSaveEnabled ? (vi ? `${wins} màn thắng · đã đồng bộ` : `${wins} wins · synced`) : vi ? 'Tiến trình chỉ lưu trên thiết bị này.' : 'Progress is saved on this device only.'}</p>${legacy}<label>${vi ? 'Mật khẩu hiện tại' : 'Current password'}<input id="account-current-password" type="password" autocomplete="current-password"></label><label>${vi ? 'Mật khẩu mới (10–128 ký tự)' : 'New password (10–128 characters)'}<input id="account-next-password" type="password" autocomplete="new-password" minlength="10" maxlength="128"></label><div class="account-actions"><button data-action="account-password">${vi ? 'Đổi mật khẩu' : 'Change password'}</button>${state.emailDeliveryConfigured && state.account.email ? `<button data-action="account-request-reset">${vi ? 'Gửi link đặt lại mật khẩu' : 'Email a password reset link'}</button>` : ''}<button data-action="account-logout">${vi ? 'Đăng xuất' : 'Sign out'}</button></div>${pendingActionPanel}<p class="account-message" role="status">${escapeHTML(message)}</p></section>`;
 }
 async function leaveRoom(old: Room | null) {
   if (!old) return;
   old.reconnection.enabled = false;
   if (old.connection.isOpen) await old.leave().catch(() => {});
+}
+let connectionAttempt = new AbortController();
+function invalidateConnection() {
+  connectionAttempt.abort();
+  connectionAttempt = new AbortController();
+  connected = false;
+  tapNavigation.cancel();
+  try {
+    sessionStorage.removeItem('kr-reconnect');
+  } catch {}
+  return connectionAttempt.signal;
 }
 function send(intent: Intent | TeamIntent) {
   if (intent.type === 'move') tapNavigation.cancel();
@@ -209,21 +293,75 @@ async function prepareAccountSession() {
     }),
   ]);
   if (timeout) clearTimeout(timeout);
-  if (
-    accountClient.state.configured &&
-    (!accountClient.state.available || !accountClient.state.account)
-  )
-    throw new Error('accountSessionUnavailable');
+  // Account persistence is optional: database/auth outages must not prevent Guest play.
 }
-async function updateAccount(action: 'login' | 'register' | 'logout') {
+async function updateAccount(
+  action:
+    | 'login'
+    | 'register'
+    | 'logout'
+    | 'password'
+    | 'verify-email'
+    | 'reset-password'
+    | 'request-verification'
+    | 'request-reset',
+) {
   accountMessage = '';
   try {
     if (action === 'logout') await accountClient.logout();
-    else {
-      const username =
-        document.querySelector<HTMLInputElement>('#account-username')?.value.trim() ?? '';
+    else if (action === 'password') {
+      const currentPassword =
+        document.querySelector<HTMLInputElement>('#account-current-password')?.value ?? '';
+      const nextPassword =
+        document.querySelector<HTMLInputElement>('#account-next-password')?.value ?? '';
+      await accountClient.changePassword(currentPassword, nextPassword);
+      accountMessage = language === 'vi' ? 'Đã đổi mật khẩu.' : 'Password changed.';
+    } else if (action === 'verify-email') {
+      if (!pendingAccountAction || pendingAccountAction.purpose !== 'verifyEmail')
+        throw new Error('invalidActionToken');
+      await accountClient.verifyEmail(pendingAccountAction.token);
+      pendingAccountAction = null;
+      accountMessage =
+        language === 'vi'
+          ? 'Email đã được xác minh và tài khoản đã đăng nhập.'
+          : 'Email verified and account signed in.';
+    } else if (action === 'reset-password') {
+      if (!pendingAccountAction || pendingAccountAction.purpose !== 'resetPassword')
+        throw new Error('invalidActionToken');
+      const nextPassword =
+        document.querySelector<HTMLInputElement>('#account-recovery-password')?.value ?? '';
+      await accountClient.completePasswordReset(pendingAccountAction.token, nextPassword);
+      pendingAccountAction = null;
+      accountMessage =
+        language === 'vi'
+          ? 'Mật khẩu đã được đặt lại. Hãy đăng nhập bằng mật khẩu mới.'
+          : 'Password reset. Sign in with your new password.';
+    } else if (action === 'request-verification' || action === 'request-reset') {
+      const email =
+        document.querySelector<HTMLInputElement>('#account-email')?.value.trim() ||
+        accountClient.state.account?.email ||
+        '';
+      if (action === 'request-verification') await accountClient.requestEmailVerification(email);
+      else await accountClient.requestPasswordReset(email);
+      accountMessage =
+        language === 'vi'
+          ? 'Nếu email đủ điều kiện, hướng dẫn sẽ được gửi. Hãy kiểm tra cả thư rác.'
+          : 'If this email is eligible, instructions are on the way. Check your spam folder too.';
+    } else {
+      const email = document.querySelector<HTMLInputElement>('#account-email')?.value.trim() ?? '';
+      const displayName =
+        action === 'register'
+          ? (document.querySelector<HTMLInputElement>('#account-display-name')?.value.trim() ?? '')
+          : '';
       const password = document.querySelector<HTMLInputElement>('#account-password')?.value ?? '';
-      await accountClient.authenticate(action, username, password);
+      const importLegacy =
+        document.querySelector<HTMLInputElement>('#account-import-progress')?.checked ?? false;
+      await accountClient.authenticate(action, email, password, displayName, importLegacy);
+      if (accountClient.state.verificationPending)
+        accountMessage =
+          language === 'vi'
+            ? 'Kiểm tra email để xác minh tài khoản. Tiến trình Guest hiện tại vẫn được giữ.'
+            : 'Check your email to verify the account. Your current Guest progress is preserved.';
     }
     const progress = accountClient.state.progress;
     if (progress) {
@@ -231,7 +369,18 @@ async function updateAccount(action: 'login' | 'register' | 'logout') {
       if (!progress.unlocked.includes(selectedLevel))
         selectedLevel = progress.unlocked.at(-1) ?? level.id;
     }
-    accountOpen = false;
+    const keepOpen =
+      [
+        'password',
+        'verify-email',
+        'reset-password',
+        'request-verification',
+        'request-reset',
+      ].includes(action) || accountClient.state.verificationPending;
+    if (!keepOpen) {
+      accountOpen = false;
+      accountAuthMode = 'login';
+    }
   } catch (error) {
     accountMessage = error instanceof Error ? error.message : 'requestFailed';
   }
@@ -320,9 +469,28 @@ function render() {
   const content = currentContent(),
     stations = content.stations;
   const restaurant = restaurants.find((r) => r.id === content.restaurantId)!;
+  const visualTheme = restaurantPopTheme(restaurant.id);
+  document.body.dataset.restaurant = restaurant.id;
+  document.body.style.setProperty('--pop-ink', popCore.ink);
+  document.body.style.setProperty('--pop-paper', popCore.paper);
+  document.body.style.setProperty('--pop-danger', popSemantic.danger);
+  document.body.style.setProperty('--pop-success', popSemantic.success);
+  document.body.style.setProperty('--pop-warning', popSemantic.warning);
+  document.body.style.setProperty('--pop-room', visualTheme.room);
+  document.body.style.setProperty('--pop-cabinet', visualTheme.cabinet);
+  document.body.style.setProperty('--pop-accent', visualTheme.accent);
+  document.body.style.setProperty('--pop-secondary', visualTheme.secondary);
+  document.body.style.setProperty('--pop-wood', visualTheme.wood);
   if (screen === 'menu') {
     scene?.setLabels([]);
-    app.innerHTML = `${topbar()}<main class="menu"><section class="intro"><p class="eyebrow"><span></span> ${tr('tagline')}</p><h1>${tr('title').replace('\n', '<br>')}</h1><p class="description">${tr('intro')}</p><div class="location"><span class="sun">☀</span><div><strong>${restaurant.name[language]}</strong><small>${content.name[language]}</small></div><span class="location-number">${String(content.number).padStart(2, '0')}</span></div><label class="campaign-select">${language === 'vi' ? 'Chọn màn' : 'Choose level'}<select id="campaign-level">${levelOptions()}</select></label><button class="primary play" data-action="play">${tr('play')} <span>↗</span></button><p class="micro">${tr('phase')}</p>${b ? `<div class="best">${tr('best')} <strong>${b.score}</strong> <span>${'★'.repeat(b.stars)}</span></div>` : ''}</section><div class="scene-caption"><span>${restaurant.name[language]}</span><small>${tr('footer')}</small></div></main><footer class="menu-footer"><span>${content.id.toUpperCase()}</span><span>${tr('controls')}</span></footer>`;
+    const canInviteAccount =
+      accountClient.state.configured &&
+      accountClient.state.available &&
+      accountClient.state.authEnabled &&
+      accountClient.state.cloudSaveEnabled &&
+      accountClient.state.account?.isGuest &&
+      !saveProgressNudgeDismissed;
+    app.innerHTML = `${topbar()}<main class="menu"><section class="intro"><p class="eyebrow"><span></span> ${tr('tagline')}</p><h1>${tr('title').replace('\n', '<br>')}</h1><p class="description">${tr('intro')}</p><div class="location"><span class="sun">☀</span><div><strong>${restaurant.name[language]}</strong><small>${content.name[language]}</small></div><span class="location-number">${String(content.number).padStart(2, '0')}</span></div><label class="campaign-select">${language === 'vi' ? 'Chọn màn' : 'Choose level'}<select id="campaign-level">${levelOptions()}</select></label><button class="primary play" data-action="play">${tr('play')} <span>↗</span></button>${canInviteAccount ? `<aside class="save-progress-nudge" role="note"><span class="save-progress-icon" aria-hidden="true">☁</span><div class="save-progress-copy"><strong>${tr('saveProgressCta')}</strong><small>${tr('saveProgressNudge')}</small></div><button class="save-progress-open" data-action="account-open-login" aria-label="${tr('saveProgressCta')}">↗</button><button class="save-progress-dismiss" data-action="dismiss-save-progress" aria-label="${tr('dismissNudge')}">×</button></aside>` : ''}<p class="micro">${tr('phase')}</p>${b ? `<div class="best">${tr('best')} <strong>${b.score}</strong> <span>${'★'.repeat(b.stars)}</span></div>` : ''}</section><div class="scene-caption"><span>${restaurant.name[language]}</span><small>${tr('footer')}</small></div></main><footer class="menu-footer"><span>${content.id.toUpperCase()}</span><span>${tr('controls')}</span></footer>`;
     app
       .querySelector('.intro')
       ?.insertAdjacentHTML(
@@ -340,14 +508,14 @@ function render() {
       );
   } else if (screen === 'connecting' || screen === 'error') {
     scene?.setLabels([]);
-    app.innerHTML = `${topbar()}<div class="veil"><section class="dialog"><span class="dialog-symbol">${screen === 'error' ? '☁' : '☀'}</span><h2>${tr(screen === 'error' ? 'connectionFailed' : 'connecting')}</h2>${screen === 'error' ? `<button class="primary" data-action="play">${tr('retry')}</button><button data-action="home">${tr('home')}</button>` : '<div class="loader"></div>'}</section></div>`;
+    app.innerHTML = `${topbar()}<div class="veil"><section class="dialog"><span class="dialog-symbol">${screen === 'error' ? '☁' : '☀'}</span><h2>${tr(screen === 'error' ? 'connectionFailed' : 'connecting')}</h2>${screen === 'error' ? `<button class="primary" data-action="play">${tr('retry')}</button>` : '<div class="loader"></div>'}<button data-action="home">${tr('home')}</button></section></div>`;
   } else if (state?.phase === 'lobby') {
     scene?.setLabels([]);
     app.innerHTML =
       topbar() + '<div class="lobby-wrap"><div id="lobby"></div></div><div id="overlay"></div>';
     updateLobby();
   } else {
-    app.innerHTML = `${topbar()}<section class="hud"><div class="shift"><span class="eyebrow">${restaurant.name[language]}</span><strong>${content.name[language]}</strong></div><div class="stat"><small>${tr('time')}</small><strong id="timer">3:00</strong></div><div class="stat"><small>${tr('score')}</small><strong id="score">0 <em>/ 220</em></strong></div><div class="stat"><small>${tr('orders')}</small><strong id="orders">0 <em>/ 2</em></strong></div><div class="stat combo"><small>${tr('combo')}</small><strong id="combo">×0</strong></div><button class="icon-button" data-action="pause" aria-label="${tr('pause')}">Ⅱ</button></section><section id="orders-list" class="orders-list" aria-label="${tr('orders')}"></section><div id="station-labels">${stations.map((s) => `<button class="station-label" id="label-${s.id}" data-station="${s.id}"><span>${stationName(s)}</span><small></small></button>`).join('')}</div><aside class="help-card"><div class="eyebrow">✦ ${tr('tutorial')}</div><p>${tr('tutorialHint')}</p><button data-action="skip-tutorial">${language === 'vi' ? 'Ẩn hướng dẫn' : 'Hide tutorial'}</button><button data-action="recipe">▤ ${tr('recipe')} <span>↗</span></button></aside><div class="game-tools"><button data-action="camera" aria-label="${tr('resetView')}">⌖</button><button data-action="recipe">▤ <span>${tr('recipe')}</span></button></div><section class="bottom-bar"><div class="hand"><span class="hand-icon">♧</span><div><small>${tr('hand')}</small><strong id="hand">${tr('empty')}</strong></div></div><p id="toast" role="status"></p><button class="primary" id="finish" data-action="finish" hidden>${tr('finish')} ↗</button></section><div id="overlay"></div>`;
+    app.innerHTML = `${topbar()}<section class="hud"><div class="shift"><span class="eyebrow">${restaurant.name[language]}</span><strong>${content.name[language]}</strong></div><div class="stat"><small>${tr('time')}</small><strong id="timer">3:00</strong></div><div class="stat"><small>${tr('score')}</small><strong id="score">0 <em>/ 220</em></strong></div><div class="stat"><small>${tr('orders')}</small><strong id="orders">0 <em>/ 2</em></strong></div><div class="stat combo"><small>${tr('combo')}</small><strong id="combo">×0</strong></div><button class="icon-button" data-action="pause" aria-label="${tr('pause')}">Ⅱ</button></section><section id="orders-list" class="orders-list" aria-label="${tr('orders')}"></section><div id="station-labels">${stations.map((s) => `<button class="station-label" id="label-${s.id}" data-station="${s.id}" data-component-source="${s.id.startsWith('ingredient-')}"><span>${stationName(s)}</span><small></small></button>`).join('')}</div><aside class="help-card"><div class="eyebrow">✦ ${tr('tutorial')}</div><p>${tr('tutorialHint')}</p><button data-action="skip-tutorial">${language === 'vi' ? 'Ẩn hướng dẫn' : 'Hide tutorial'}</button><button data-action="recipe">▤ ${tr('recipe')} <span>↗</span></button></aside><div class="game-tools"><button data-action="camera" aria-label="${tr('resetView')}">⌖</button><button data-action="recipe">▤ <span>${tr('recipe')}</span></button></div><section class="bottom-bar"><div class="hand"><span class="hand-icon">♧</span><div><small>${tr('hand')}</small><strong id="hand">${tr('empty')}</strong></div></div><p id="toast" role="status"></p><button class="primary" id="finish" data-action="finish" hidden>${tr('finish')} ↗</button></section><div id="overlay"></div>`;
     if (state?.session) {
       app.insertAdjacentHTML('beforeend', '<aside id="team-panel"></aside>');
       document.querySelector('[data-action="pause"]')?.remove();
@@ -370,6 +538,7 @@ function render() {
   document.body.dataset.screen = screen;
   document.body.dataset.mode = state?.session ? 'coop' : 'solo';
   document.body.dataset.controls = preferences.touchControls;
+  scene?.setCatPlayerName(accountClient.state.account?.displayName ?? '', language);
   if (screen === 'game') {
     app.insertAdjacentHTML(
       'beforeend',
@@ -413,6 +582,8 @@ function stationStatus(s: Station) {
     return `${tr(s.kind === 'sink' ? 'washing' : 'cooking')} ${Math.round(s.progress * 100)}%`;
   if (s.phase === 'burnt') return tr('burnt');
   if (s.phase === 'ready') return tr('ready');
+  if (s.item?.kind === 'plate' && s.item.assemblyRecipe)
+    return `${recipeById(s.item.assemblyRecipe).name[language]} · ${s.item.parts.length}/${recipeById(s.item.assemblyRecipe).components.length}`;
   if (s.item?.kind === 'plate' && s.item.parts.length) return s.item.parts.map(tr).join(' + ');
   return s.item ? tr(s.item.kind) : '';
 }
@@ -532,18 +703,49 @@ function updateHud() {
     ordersList.append(ordersContent);
   }
   ordersToggle.hidden = !navigator.maxTouchPoints;
+  const urgentOrderCount = state.customers.filter((customer) => customerUrgent(customer)).length;
   ordersToggle.setAttribute('aria-expanded', String(ordersExpanded));
-  ordersToggle.textContent = `${language === 'vi' ? 'Đơn hàng' : 'Orders'} ${tickets.length} ${ordersExpanded ? '▲' : '▼'}`;
-  set(
-    'orders-content',
-    tickets
-      .map(
-        (c) =>
-          `<button class="ticket ${customerUrgent(c) ? 'customer-urgent' : ''}" data-action="track-order" data-order="${c.id}" aria-pressed="${c.id === trackedOrder}"><span class="food-icon">${customerUrgent(c) ? '⚠' : '🍔'}</span><div><small>${tr(c.seat!)}${customerUrgent(c) ? (language === 'vi' ? ' · Sắp bỏ đi' : ' · Leaving soon') : ''}</small><strong>${recipeById(c.recipe).name[language]} · ${customerTypes[c.type ?? 'regular'].name[language]}</strong><div class="patience"><i style="width:${Math.max(0, (c.patience / c.maxPatience) * 100)}%;background:${c.patience < 25 ? '#dd826e' : '#568f74'}"></i></div></div><span class="ticket-time">${Math.ceil(c.patience)}s</span></button>`,
-      )
-      .join('') +
-      `<div class="queue-pill ${state.customers.some((c) => !c.seat && customerUrgent(c)) ? 'customer-urgent' : ''}">♟ ${tr('queue')}: ${state.customers.filter((c) => !c.seat).length}/${content.queueLimit}${state.customers.some((c) => !c.seat && customerUrgent(c)) ? (language === 'vi' ? ' · ⚠ Sắp bỏ đi' : ' · ⚠ Leaving soon') : ''}</div>`,
+  ordersToggle.dataset.urgent = String(urgentOrderCount > 0);
+  ordersToggle.textContent = `${urgentOrderCount ? '⚠ ' : ''}${language === 'vi' ? 'Đơn' : 'Orders'} ${tickets.length} ${ordersExpanded ? '▲' : '▼'}`;
+  // Keep each ticket button alive between snapshots so touch/click can finish.
+  for (const existing of Array.from(ordersContent.querySelectorAll<HTMLElement>('.ticket'))) {
+    if (!tickets.some((ticket) => ticket.id === existing.dataset.order)) existing.remove();
+  }
+  for (const customer of tickets) {
+    let ticket = ordersContent.querySelector<HTMLButtonElement>(`[data-order="${customer.id}"]`);
+    if (!ticket) {
+      ticket = document.createElement('button');
+      ticket.className = 'ticket';
+      ticket.dataset.action = 'track-order';
+      ticket.dataset.order = customer.id;
+      ticket.innerHTML =
+        '<span class="food-icon"></span><div><small></small><strong></strong><div class="patience"><i></i></div></div><span class="ticket-time"></span>';
+      ordersContent.append(ticket);
+    }
+    const urgent = customerUrgent(customer);
+    ticket.classList.toggle('customer-urgent', urgent);
+    ticket.setAttribute('aria-pressed', String(customer.id === trackedOrder));
+    ticket.querySelector('.food-icon')!.textContent = urgent ? '⚠' : recipeIcon(customer.recipe);
+    ticket.querySelector('small')!.textContent =
+      tr(customer.seat!) + (urgent ? (language === 'vi' ? ' · Sắp bỏ đi' : ' · Leaving soon') : '');
+    ticket.querySelector('strong')!.textContent =
+      `${recipeById(customer.recipe).name[language]} · ${customerTypes[customer.type ?? 'regular'].name[language]}`;
+    const patience = ticket.querySelector<HTMLElement>('.patience i')!;
+    patience.style.width = `${Math.max(0, (customer.patience / customer.maxPatience) * 100)}%`;
+    patience.style.background = customer.patience < 25 ? '#dd826e' : '#568f74';
+    ticket.querySelector('.ticket-time')!.textContent = `${Math.ceil(customer.patience)}s`;
+  }
+  let queuePill = ordersContent.querySelector<HTMLElement>('.queue-pill');
+  if (!queuePill) {
+    queuePill = document.createElement('div');
+    queuePill.className = 'queue-pill';
+  }
+  ordersContent.append(queuePill);
+  const queueUrgent = state.customers.some(
+    (customer) => !customer.seat && customerUrgent(customer),
   );
+  queuePill.classList.toggle('customer-urgent', queueUrgent);
+  queuePill.textContent = `♟ ${tr('queue')}: ${state.customers.filter((customer) => !customer.seat).length}/${content.queueLimit}${queueUrgent ? (language === 'vi' ? ' · ⚠ Sắp bỏ đi' : ' · ⚠ Leaving soon') : ''}`;
   ordersList.dataset.expanded = String(ordersExpanded);
   for (const s of state.stations) {
     const el = document.getElementById(`label-${s.id}`);
@@ -567,7 +769,10 @@ function updateHud() {
             ? '⚠ Sắp cháy!'
             : '⚠ Burning soon!'
           : stationStatus(s);
-      el.classList.toggle('station-ready', s.phase === 'ready' || s.item?.kind === 'burger');
+      el.classList.toggle(
+        'station-ready',
+        s.phase === 'ready' || !!(s.item && dishRecipe(s.item.kind)),
+      );
       el.classList.toggle('station-burnt', s.phase === 'burnt');
       el.classList.toggle('station-target', (tapNavigation.pending?.station ?? c?.target) === s.id);
       el.classList.toggle('station-guidance', nextHint?.station === s.id);
@@ -622,19 +827,32 @@ function updateOverlay() {
   if (!overlay || !state) return;
   let html = '';
   if (!connected)
-    html = `<div class="veil"><section class="dialog"><h2>${tr('disconnected')}</h2><div class="loader"></div></section></div>`;
+    html = `<div class="veil"><section class="dialog"><h2>${tr('disconnected')}</h2><div class="loader"></div><button data-action="home">${tr('home')}</button></section></div>`;
   else if (state.countdown) {
     html = `<div class="veil"><section class="dialog" role="status"><p>${language === 'vi' ? 'Sẵn sàng vào bếp' : 'Ready for the kitchen'}</p><h2>${state.countdown}</h2><p>${language === 'vi' ? 'Chạm sàn để đi · Chạm trạm để thao tác' : 'Tap the floor to walk · Tap a station to use it'}</p></section></div>`;
   } else if (state.result) {
     const r = state.result;
-    html = `<div class="veil"><section class="dialog results"><div class="result-stars">${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}</div><p class="eyebrow">${currentContent().name[language]}</p><h2>${tr(r.won ? 'won' : 'lost')}</h2><p>${tr('resultHint')}</p><div class="result-grid"><div><small>${tr('score')}</small><strong>${r.score}</strong></div><div><small>${tr('orders')}</small><strong>${r.served}</strong></div><div><small>${tr('bestCombo')}</small><strong>×${r.bestCombo}</strong></div><div><small>${tr('missed')}</small><strong>${r.missed}</strong></div></div><small>${tr(saveMessage)}</small><button class="primary" data-action="play">${tr('replay')} ↗</button><button data-action="home">${tr('home')}</button></section></div>`;
+    const isSessionHost = state.session?.host === room?.sessionId;
+    html = `<div class="veil"><section class="dialog results"><div class="result-stars">${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}</div><p class="eyebrow">${currentContent().name[language]}</p><h2>${tr(r.won ? 'won' : 'lost')}</h2><p>${tr('resultHint')}</p><div class="result-grid"><div><small>${tr('score')}</small><strong>${r.score}</strong></div><div><small>${tr('orders')}</small><strong>${r.served}</strong></div><div><small>${tr('bestCombo')}</small><strong>×${r.bestCombo}</strong></div><div><small>${tr('missed')}</small><strong>${r.missed}</strong></div></div>${state.session ? `<p class="team-streak-result">${tr('teamStreak')}: ×${state.session.teamStreak}</p>` : ''}<small>${tr(saveMessage)}</small>${state.session ? (isSessionHost ? `<button class="primary" data-action="continue-team">${tr(r.won ? 'continueNext' : 'retryTogether')} ↗</button>` : `<p class="team-waiting">${tr('waitingForHost')}</p>`) : `<button class="primary" data-action="play">${tr('replay')} ↗</button>`}<button data-action="home">${tr('home')}</button></section></div>`;
   } else if (state.phase === 'paused')
     html = `<div class="veil"><section class="dialog"><span class="dialog-symbol">☕</span><h2>${tr('paused')}</h2><p>${tr('pausedHint')}</p><button class="primary" data-action="pause">${tr('resume')}</button><button data-action="home">${tr('home')}</button></section></div>`;
   else if (notebook)
-    html = `<div class="notebook" role="dialog" aria-modal="false" aria-label="${tr('recipe')}"><button class="notebook-close" data-action="recipe" aria-label="${tr('close')}">×</button><p class="eyebrow">${tr('recipe')}</p><div class="recipe-hero">🍔</div>${currentContent()
-      .recipes.map((id) => {
+    html = `<div class="notebook" role="dialog" aria-modal="false" aria-label="${tr('recipe')}"><button class="notebook-close" data-action="recipe" aria-label="${tr('close')}">×</button><p class="eyebrow">${tr('recipe')}</p><nav class="recipe-tabs" aria-label="${tr('recipe')}">${currentContent()
+      .recipes.map(
+        (id) =>
+          `<button class="recipe-tab" data-action="recipe-tab" data-recipe="${id}" aria-pressed="${id === (notebookRecipe ?? currentContent().recipes[0])}">${recipeIcon(id)} ${recipeById(id).name[language]}</button>`,
+      )
+      .join('')}</nav>${currentContent()
+      .recipes.filter(
+        (id) =>
+          id ===
+          (currentContent().recipes.includes(notebookRecipe ?? '')
+            ? notebookRecipe
+            : currentContent().recipes[0]),
+      )
+      .map((id) => {
         const r = recipeById(id);
-        return `<h2>${r.name[language]}</h2><p>${tr('recipeHint')}</p><ol class="recipe-steps">${r.steps.map((step, index) => `<li class="recipe-step"><strong>${index + 1}. ${tr(step.output)}</strong><p>${step.inputs.map(tr).join(' + ')} → <b>${tr(step.station)}</b> ${step.seconds ? step.seconds + 's' : step.taps ? step.taps + '×' : ''}</p><small>${step.dependsOn.length ? `${language === 'vi' ? 'Sau bước' : 'After step'} ${step.dependsOn.map((id) => r.steps.findIndex((s) => s.id === id) + 1).join(', ')}` : language === 'vi' ? 'Nhánh độc lập · có thể chuẩn bị song song' : 'Independent branch · prepare in parallel'}</small></li>`).join('')}</ol>`;
+        return `<div class="recipe-hero">${recipeIcon(r.id)}</div><h2>${r.name[language]}</h2><p>${tr('recipeHint')}</p><ol class="recipe-steps">${r.steps.map((step, index) => `<li class="recipe-step"><strong>${index + 1}. ${tr(step.output)}</strong><p>${step.inputs.map(tr).join(' + ')} → <b>${tr(step.station)}</b> ${step.seconds ? step.seconds + 's' : step.taps ? step.taps + '×' : ''}</p><small>${step.dependsOn.length ? `${language === 'vi' ? 'Sau bước' : 'After step'} ${step.dependsOn.map((id) => r.steps.findIndex((s) => s.id === id) + 1).join(', ')}` : language === 'vi' ? 'Nhánh độc lập · có thể chuẩn bị song song' : 'Independent branch · prepare in parallel'}</small></li>`).join('')}</ol>`;
       })
       .join(
         '',
@@ -650,17 +868,16 @@ function updateOverlay() {
           `<button class="primary" data-action="next-level">${language === 'vi' ? 'Màn tiếp theo' : 'Next level'} →</button>`,
         );
   }
-  if (state.result && state.session) {
-    const replay = overlay.querySelector<HTMLButtonElement>('[data-action="play"]');
-    if (replay) {
-      replay.dataset.action = 'multiplayer';
-      replay.textContent = tr('cookTogether');
-    }
-  }
 }
-async function attach(r: Room) {
+async function attach(r: Room, signal: AbortSignal) {
+  if (signal.aborted) {
+    void leaveRoom(r);
+    return;
+  }
+  const isCurrent = () => !signal.aborted && room === r;
   tapNavigation.cancel();
   trackedOrder = undefined;
+  notebookRecipe = undefined;
   // A single retry owner avoids the SDK retry loop competing with explicit reconnects.
   r.reconnection.enabled = false;
   room = r;
@@ -677,7 +894,7 @@ async function attach(r: Room) {
     sessionStorage.setItem('kr-reconnect', r.reconnectionToken);
   } catch {}
   const receive = (s: any) => {
-    if (!s.snapshot) return;
+    if (!isCurrent() || !s.snapshot) return;
     try {
       const previousLobby = state?.phase === 'lobby',
         previousCoop = !!state?.session,
@@ -700,19 +917,20 @@ async function attach(r: Room) {
   };
   r.onStateChange(receive);
   r.onMessage('notice', (key: string) => {
+    if (!isCurrent()) return;
     const el = document.getElementById('team-notice') ?? document.getElementById('toast');
     if (el) el.textContent = tr(key);
   });
   receive(r.state);
   r.onDrop(() => {
-    tapNavigation.cancel();
-    if (room === r) {
+    if (isCurrent()) {
+      tapNavigation.cancel();
       connected = false;
       updateOverlay();
     }
   });
   r.onReconnect(() => {
-    if (room === r) {
+    if (isCurrent()) {
       connected = true;
       try {
         sessionStorage.setItem('kr-reconnect', r.reconnectionToken);
@@ -721,89 +939,111 @@ async function attach(r: Room) {
     }
   });
   r.onLeave(async () => {
-    if (room !== r || screen !== 'game') return;
+    if (!isCurrent() || screen !== 'game') return;
     connected = false;
     updateOverlay();
     const deadline = Date.now() + 20000;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      if (room !== r || screen !== 'game') return;
+      if (!isCurrent() || screen !== 'game') return;
       try {
-        await attach(await connectRoom(client.reconnect(r.reconnectionToken)));
+        await attach(await connectRoom(client.reconnect(r.reconnectionToken), signal), signal);
         return;
-      } catch {}
+      } catch {
+        if (signal.aborted) return;
+      }
     }
-    if (room === r) {
+    if (isCurrent()) {
       screen = 'error';
       render();
     }
   });
   r.onError(() => {
-    if (room === r) {
+    if (isCurrent()) {
       connected = false;
       updateOverlay();
     }
   });
 }
-function connectRoom(operation: Promise<Room>) {
-  let timedOut = false;
+function connectRoom(operation: Promise<Room>, signal: AbortSignal) {
+  let cancelled = signal.aborted;
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const guarded = operation.then((connectedRoom) => {
-    if (timedOut) void leaveRoom(connectedRoom);
+    if (cancelled || signal.aborted) {
+      void leaveRoom(connectedRoom);
+      throw new Error('roomConnectionCancelled');
+    }
     return connectedRoom;
   });
+  let onAbort: () => void;
   return Promise.race([
     guarded,
     new Promise<never>((_resolve, reject) => {
+      onAbort = () => {
+        cancelled = true;
+        reject(new Error('roomConnectionCancelled'));
+      };
+      if (signal.aborted) return onAbort();
+      signal.addEventListener('abort', onAbort, { once: true });
       timeout = setTimeout(() => {
-        timedOut = true;
+        cancelled = true;
         reject(new Error('roomConnectionTimeout'));
       }, 15000);
     }),
   ]).finally(() => {
     if (timeout) clearTimeout(timeout);
+    signal.removeEventListener('abort', onAbort);
   });
 }
 async function play() {
+  const signal = invalidateConnection();
   lastTeamRequest = null;
   audio.unlock();
   const old = room;
   room = null;
-  await leaveRoom(old);
+  void leaveRoom(old);
   state = null;
   screen = 'connecting';
   render();
   try {
     tutorialSkipped = false;
     await prepareAccountSession();
-    await attach(await connectRoom(client.create('solo', { levelId: selectedLevel })));
+    if (signal.aborted) return;
+    await attach(
+      await connectRoom(client.create('solo', { levelId: selectedLevel }), signal),
+      signal,
+    );
   } catch (e) {
+    if (signal.aborted) return;
     console.error(e);
     screen = 'error';
     render();
   }
 }
 async function playTeam(mode: 'private' | 'public' | 'join', code = '', preferredSize?: number) {
+  const signal = invalidateConnection();
   const size =
     preferredSize ?? Number(document.querySelector<HTMLSelectElement>('#team-size')?.value ?? 4);
   lastTeamRequest = { mode, code, size };
   audio.unlock();
   const old = room;
   room = null;
-  await leaveRoom(old);
+  void leaveRoom(old);
   state = null;
   screen = 'connecting';
   render();
   try {
     await prepareAccountSession();
+    if (signal.aborted) return;
     const next =
       mode === 'join'
         ? client.joinById(code.trim())
         : mode === 'public'
           ? client.joinOrCreate('coop_public', { teamSize: size, levelId: selectedLevel })
           : client.create('coop_private', { teamSize: size, levelId: selectedLevel });
-    await attach(await connectRoom(Promise.resolve(next)));
+    await attach(await connectRoom(Promise.resolve(next), signal), signal);
   } catch (e) {
+    if (signal.aborted) return;
     console.error(e);
     screen = 'error';
     render();
@@ -821,6 +1061,40 @@ app.addEventListener('click', (e) => {
   const target = (e.target as HTMLElement).closest<HTMLElement>('button,[data-action]');
   if (!target) return;
   e.preventDefault();
+  if (target.dataset.action === 'account-auth-mode') {
+    const mode = target.dataset.authMode;
+    if (mode === 'login' || mode === 'register') {
+      accountAuthMode = mode;
+      const form = target.closest<HTMLElement>('.account-auth');
+      if (form) {
+        form.dataset.mode = mode;
+        form.querySelectorAll<HTMLButtonElement>('[data-auth-mode]').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.authMode === mode));
+        });
+        const password = form.querySelector<HTMLInputElement>('#account-password');
+        if (password)
+          password.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+      }
+    }
+    return;
+  }
+  if (target.dataset.action === 'copy-game-link') {
+    const url = window.location.href;
+    void (async () => {
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(url);
+        target.textContent = tr('linkCopied');
+      } catch {
+        window.prompt(tr('copyPrompt'), url);
+      }
+    })();
+    return;
+  }
+  if (target.dataset.action === 'reload-game') {
+    window.location.reload();
+    return;
+  }
   audio.unlock();
   if (target.dataset.chat) {
     send({ type: 'quickChat', value: target.dataset.chat as 'thanks' });
@@ -855,8 +1129,19 @@ app.addEventListener('click', (e) => {
       rotationDismissed = true;
       target.remove();
       break;
+    case 'recipe-tab':
+      if (currentContent().recipes.includes(target.dataset.recipe ?? '')) {
+        notebookRecipe = target.dataset.recipe;
+        updateHud();
+      }
+      break;
     case 'track-order':
       trackedOrder = target.dataset.order;
+      {
+        const order = state?.customers.find((customer) => customer.id === trackedOrder);
+        if (order) send({ type: 'selectRecipe', recipe: order.recipe });
+      }
+      if (navigator.maxTouchPoints) ordersExpanded = false;
       updateHud();
       break;
     case 'settings':
@@ -866,7 +1151,18 @@ app.addEventListener('click', (e) => {
       break;
     case 'account':
       accountOpen = !accountOpen;
+      accountAuthMode = 'login';
       accountMessage = '';
+      render();
+      break;
+    case 'account-open-login':
+      accountOpen = true;
+      accountAuthMode = 'login';
+      accountMessage = '';
+      render();
+      break;
+    case 'dismiss-save-progress':
+      saveProgressNudgeDismissed = true;
       render();
       break;
     case 'account-register':
@@ -878,11 +1174,27 @@ app.addEventListener('click', (e) => {
     case 'account-logout':
       void updateAccount('logout');
       break;
+    case 'account-password':
+      void updateAccount('password');
+      break;
+    case 'account-verify-email':
+      void updateAccount('verify-email');
+      break;
+    case 'account-reset-password':
+      void updateAccount('reset-password');
+      break;
+    case 'account-resend-verification':
+      void updateAccount('request-verification');
+      break;
+    case 'account-request-reset':
+      void updateAccount('request-reset');
+      break;
     case 'skip-tutorial':
       tutorialSkipped = true;
       updateHud();
       break;
     case 'multiplayer': {
+      invalidateConnection();
       const old = room;
       room = null;
       void leaveRoom(old);
@@ -912,6 +1224,17 @@ app.addEventListener('click', (e) => {
     case 'start-team':
       send({ type: 'start' });
       break;
+    case 'continue-team': {
+      if (!state?.session || state.session.host !== room?.sessionId || !state.result) break;
+      const next = levels[levels.findIndex((l) => l.id === currentContent().id) + 1];
+      const canAdvance =
+        state.result.won && next && unlockedLevels(wins).some((l) => l.id === next.id);
+      send({
+        type: 'continue',
+        levelId: canAdvance ? next.id : currentContent().id,
+      });
+      break;
+    }
     case 'copy-invite': {
       const url = new URL(location.href);
       url.search = '';
@@ -942,7 +1265,7 @@ app.addEventListener('click', (e) => {
       else void play();
       break;
     case 'home': {
-      tapNavigation.cancel();
+      invalidateConnection();
       const old = room;
       room = null;
       void leaveRoom(old);
@@ -1056,6 +1379,8 @@ window.addEventListener('blur', () => {
 });
 try {
   scene = new KitchenScene(document.querySelector<HTMLCanvasElement>('#game')!);
+  scene.onCatMeow = () => audio.play('catMeow');
+  scene.onCatPet = () => audio.play('catPurr');
   applyPreferences();
   scene.onMove = (p) => {
     mobileControls.stop(false);
@@ -1091,17 +1416,46 @@ try {
     history.replaceState(null, '', location.pathname);
     void playTeam('join', invitation);
   } else if (token) {
+    const signal = invalidateConnection();
     screen = 'connecting';
     render();
     void prepareAccountSession()
-      .then(() => connectRoom(client.reconnect(token!)))
-      .then(attach)
+      .then(() => {
+        if (signal.aborted) throw new Error('roomConnectionCancelled');
+        return connectRoom(client.reconnect(token!), signal);
+      })
+      .then((r) => attach(r, signal))
       .catch(() => {
+        if (signal.aborted) return;
         screen = 'menu';
         render();
       });
   }
 } catch (e) {
   console.error(e);
-  app.innerHTML = `<div class="veil"><section class="dialog"><h2>${tr('webgl')}</h2></section></div>`;
+  const userAgent = navigator.userAgent;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(userAgent);
+  const errorText = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  const webglUnavailable = /webgl|graphics context/i.test(errorText);
+  const hint = !webglUnavailable
+    ? tr('startupGeneralHint')
+    : isIOS
+      ? tr('webglIosHint')
+      : isAndroid
+        ? tr('webglAndroidHint')
+        : tr('webglDesktopHint');
+  const details = escapeHTML(errorText).slice(0, 600);
+  app.innerHTML = `<div class="veil"><section class="dialog webgl-recovery" role="alert">
+    <div class="dialog-symbol" aria-hidden="true">◌</div>
+    <h2>${tr('webgl')}</h2>
+    <p>${hint}</p>
+    <div class="webgl-recovery-actions">
+      <button class="primary" data-action="copy-game-link">${tr('copyGameLink')}</button>
+      <button data-action="reload-game">${tr('tryAgain')}</button>
+    </div>
+    <details><summary>${tr('technicalDetails')}</summary><code>${details}</code></details>
+  </section></div>`;
 }

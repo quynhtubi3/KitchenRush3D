@@ -5,24 +5,24 @@
   },
   "canvas": {
     "x": 0,
-    "y": 150,
+    "y": 124,
     "width": 390,
-    "height": 566,
-    "cssHeight": "566px",
-    "cssTop": "150px",
-    "cssBottom": "128px"
+    "height": 608,
+    "cssHeight": "608px",
+    "cssTop": "124px",
+    "cssBottom": "112px"
   },
   "hud": {
     "x": 10,
-    "y": 56,
+    "y": 44,
     "width": 370,
-    "height": 53
+    "height": 46
   },
   "orders": {
-    "x": 10,
-    "y": 106,
-    "width": 370,
-    "height": 40
+    "x": 8,
+    "y": 84,
+    "width": 374,
+    "height": 36
   },
   "hand": {
     "x": 133,
@@ -45,7 +45,7 @@
   "camera": {
     "profile": "mobile-portrait",
     "orthoWidth": 8.68,
-    "orthoHeight": 12.6,
+    "orthoHeight": 13.53,
     "zoom": 1.82,
     "targetX": 0,
     "targetZ": 0.66,
@@ -58,96 +58,96 @@
     "edgeMarkers": 0,
     "stageBoundsPx": {
       "x": 0,
-      "y": 26,
+      "y": 47,
       "width": 390,
       "height": 459
     },
-    "stageCanvasAreaPercent": 81.1,
+    "stageCanvasAreaPercent": 75.5,
     "stationLabelsVisible": 0,
     "stationLabelsOverlapPairs": 0,
     "stationLabelsHiddenForOverlap": 0
   },
-  "gameplayOcclusionPercent": 5.9,
+  "gameplayOcclusionPercent": 6.3,
   "stationLabels": [
     {
       "id": "meat",
       "context": "idle",
       "onScreen": false,
       "offscreen": false,
-      "x": 356,
-      "y": 187
+      "x": 354,
+      "y": 180
     },
     {
       "id": "stove",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 301,
-      "y": 187
+      "x": 300,
+      "y": 169
     },
     {
       "id": "lettuce",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 210,
-      "y": 187
+      "x": 209,
+      "y": 180
     },
     {
       "id": "board",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 134,
-      "y": 187
+      "x": 133,
+      "y": 180
     },
     {
       "id": "bun",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 37,
-      "y": 187
+      "x": 36,
+      "y": 180
     },
     {
       "id": "rack",
       "context": "idle",
       "onScreen": false,
       "offscreen": false,
-      "x": 352,
-      "y": 291
+      "x": 350,
+      "y": 284
     },
     {
       "id": "sink",
       "context": "idle",
       "onScreen": false,
       "offscreen": false,
-      "x": 356,
-      "y": 384
+      "x": 354,
+      "y": 377
     },
     {
       "id": "trash",
       "context": "idle",
       "onScreen": false,
       "offscreen": false,
-      "x": 348,
-      "y": 468
+      "x": 346,
+      "y": 461
     },
     {
       "id": "assembly",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 215,
-      "y": 354
+      "x": 214,
+      "y": 347
     },
     {
       "id": "counter",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 113,
-      "y": 354
+      "x": 112,
+      "y": 347
     },
     {
       "id": "seat1",
@@ -155,7 +155,7 @@
       "onScreen": false,
       "offscreen": false,
       "x": 4,
-      "y": 301
+      "y": 294
     },
     {
       "id": "seat2",
@@ -163,7 +163,7 @@
       "onScreen": false,
       "offscreen": false,
       "x": 4,
-      "y": 426
+      "y": 419
     }
   ]
 }

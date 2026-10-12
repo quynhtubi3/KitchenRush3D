@@ -10,7 +10,13 @@ export type ItemKind =
   | 'plate'
   | 'burger'
   | 'dirtyPlate';
-export type Item = { id: string; kind: ItemKind; parts: ItemKind[] };
+export type Item = {
+  id: string;
+  kind: ItemKind;
+  parts: ItemKind[];
+  assemblyRecipe?: string;
+  assemblyChefs?: string[];
+};
 export type StationKind =
   | 'dispenser'
   | 'board'
@@ -41,6 +47,7 @@ export type Customer = {
   recipe: string;
 };
 export type Chef = Point & {
+  preferredRecipe?: string;
   id: string;
   item: Item | null;
   path: Point[];
@@ -82,6 +89,7 @@ export type Snapshot = {
 export type Intent =
   | { type: 'move'; x: number; z: number }
   | { type: 'interact'; station: string }
+  | { type: 'selectRecipe'; recipe: string }
   | { type: 'finish' | 'pause' };
 
 export const QUICK_CHAT = ['needPlates', 'onGrill', 'servePlease', 'thanks'] as const;
@@ -93,6 +101,7 @@ export type SocialIntent =
 export type TeamIntent =
   | { type: 'ready'; ready: boolean }
   | { type: 'start' }
+  | { type: 'continue'; levelId: string }
   | { type: 'selectLevel'; levelId: string }
   | { type: 'voteFinish'; agree: boolean }
   | SocialIntent;
@@ -106,6 +115,7 @@ export type SessionState = {
   levelId: string;
   members: Member[];
   startedSize: number;
+  teamStreak: number;
   votes: string[];
   targetScore: number;
   targetOrders: number;

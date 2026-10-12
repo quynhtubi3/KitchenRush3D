@@ -34,4 +34,5 @@ export class Presentation {
   }
 }
 
-export const effectBudget = (low: boolean, reduced: boolean) => (reduced ? 0 : low ? 6 : 24);
+export const effectBudget = (low: boolean, reduced: boolean, touch = false) =>
+  reduced ? 0 : low ? 6 : touch ? 12 : 24;

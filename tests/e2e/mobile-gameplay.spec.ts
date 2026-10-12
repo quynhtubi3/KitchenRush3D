@@ -40,10 +40,14 @@ for (const viewport of viewports)
       await page.waitForTimeout(800);
       if (viewport.touch) {
         const ordersToggle = page.locator('.orders-toggle');
+        const compactOrders = viewport.width <= 700 || viewport.id === 'landscape-844x390';
+        if (compactOrders) await expect(page.locator('.orders-content')).toBeHidden();
         await ordersToggle.click();
         await expect(ordersToggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(page.locator('.orders-content')).toBeVisible();
         await ordersToggle.click();
         await expect(ordersToggle).toHaveAttribute('aria-expanded', 'false');
+        if (compactOrders) await expect(page.locator('.orders-content')).toBeHidden();
       }
       await page.locator('[data-action="pause"]').click();
       await expect(page.locator('.veil')).toBeVisible();
@@ -130,11 +134,11 @@ for (const viewport of viewports)
               : 'mobile-portrait';
       expect(layout.camera.profile).toBe(expectedProfile);
       if (viewport.id === 'portrait-390x844') {
-        expect(layout.canvas.y).toBeGreaterThanOrEqual(145);
-        expect(layout.canvas.height).toBeGreaterThan(540);
-        expect(layout.canvas.height).toBeLessThan(600);
+        expect(layout.canvas.y).toBeGreaterThanOrEqual(120);
+        expect(layout.canvas.height).toBeGreaterThan(590);
+        expect(layout.canvas.height).toBeLessThan(650);
         expect(layout.canvas.cssHeight).not.toBe('844px');
-        expect(layout.canvas.y + layout.canvas.height).toBeLessThanOrEqual(720);
+        expect(layout.canvas.y + layout.canvas.height).toBeLessThanOrEqual(740);
         expect(layout.camera.zoom).toBeGreaterThan(1.4);
         expect(layout.camera.stageCanvasAreaPercent).toBeGreaterThan(70);
         expect(layout.camera.stationLabelsOverlapPairs).toBe(0);

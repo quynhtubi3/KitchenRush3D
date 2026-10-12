@@ -1,0 +1,50 @@
+{
+  "viewport": { "name": "desktop-1920", "width": 1920, "height": 1080 },
+  "renderer": "Chromium SwiftShader, touch profile; not native hardware",
+  "meshes": 237,
+  "activeMeshes": 183,
+  "drawCalls": 280,
+  "drawCallsMean": 200.390243902439,
+  "materials": 155,
+  "uniqueGeometries": 237,
+  "fps": 3,
+  "triangles": 93766,
+  "geometryBytesEstimated": 3101192,
+  "textureBytesEstimated": 7670339,
+  "shadowCasters": 97,
+  "quality": "standard",
+  "resolution": {
+    "css": [1920, 1080],
+    "buffer": [1920, 1080],
+    "dpr": 1,
+    "hardwareScalingLevel": 1,
+    "effectiveScale": 1,
+    "profile": "balanced",
+    "sharpness": "auto",
+    "fps": 2.566869029931409,
+    "targetFps": 30,
+    "shadowMapSize": 512,
+    "shadowMode": "poisson",
+    "renderedFrames": 40,
+    "shadowRenderedFrames": 35,
+    "faces": ["neutral:false", "neutral:false"],
+    "characterArtVersion": "chef-procedural-v1",
+    "sceneBuildMs": 635.8000001907349,
+    "sceneReadyMs": 5139.699999809265,
+    "characterSlots": [
+      ["hat", "hair", "apron"],
+      ["hat", "hair", "apron"]
+    ],
+    "characterBindingsValid": true,
+    "frameMs": 1396.1999998092651,
+    "frameMean": 389.57967404621405,
+    "frameP95": 1166.800048828125,
+    "frameP99": 1350.800048828125,
+    "renderer": {
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "zoom": 0.96
+  }
+}

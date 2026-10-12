@@ -3,37 +3,53 @@ import { resolve } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { levels, restaurants, recipeById, items } from '../../packages/content/src/campaign';
 
-async function station(page: import('@playwright/test').Page, id: string, holding?: string) {
-  await page.locator(`[data-station="${id}"]`).click();
-  if (holding) await expect(page.locator('#hand')).toHaveText(holding);
-  else await page.waitForTimeout(1800);
-}
-
 async function assembleDish(page: import('@playwright/test').Page, levelId: string) {
   const level = levels.find((l) => l.id === levelId)!;
-  const recipe = recipeById(level.recipes[0]);
-  const hot = recipe.steps[0],
-    cold = recipe.steps[1];
-  const name = (kind: string) => items.get(kind)!.name.vi;
-  await station(page, 'rack', 'Đĩa');
-  await station(page, 'assembly', 'Tay trống');
-  await station(page, 'meat', name(hot.inputs[0]));
-  await station(page, 'stove', 'Tay trống');
-  await station(page, 'lettuce', name(cold.inputs[0]));
-  await station(page, 'board', 'Tay trống');
-  for (let tap = 1; tap <= 3; tap++) {
-    await page.locator('[data-station="board"]').click();
-    await expect(page.locator('[data-station="board"] small')).toContainText(
-      tap < 3 ? `${tap}/3` : 'Sẵn sàng',
-    );
+  // Cook the recipe on a real guest ticket. These levels have signature variants
+  // that share their first components, so assuming recipes[0] can lock the plate
+  // to a different valid order before the final component is added.
+  const ticket = page.locator('.ticket').first();
+  await expect(ticket).toBeVisible({ timeout: 15000 });
+  const ticketTitle = await ticket.locator('strong').innerText();
+  const recipe = level.recipes
+    .map(recipeById)
+    .find((entry) => ticketTitle.startsWith(entry.name.vi));
+  if (!recipe) throw new Error(`Could not match guest ticket to a recipe: ${ticketTitle}`);
+  await ticket.click();
+  const interact = async (id: string) => page.locator(`[data-station="${id}"]`).click();
+  const prepare = async (kind: string, visiting = new Set<string>()): Promise<void> => {
+    if (visiting.has(kind)) throw new Error(`Recipe graph cycle at ${recipe.id}:${kind}`);
+    const source = level.stations.find((entry) => entry.ingredient === kind);
+    if (source) {
+      await interact(source.id);
+      await expect(page.locator('#hand')).toHaveText(items.get(kind)!.name.vi);
+      return;
+    }
+    const step = recipe.steps.find((entry) => entry.output === kind);
+    if (!step || step.station === 'assembly') throw new Error(`No source for ${recipe.id}:${kind}`);
+    const next = new Set(visiting).add(kind);
+    for (const input of step.inputs) await prepare(input, next);
+    await interact(step.station);
+    await expect(page.locator('#hand')).toHaveText('Tay trống');
+    for (let tap = 0; tap < step.taps; tap++) await interact(step.station);
+    await expect(page.locator(`#label-${step.station}`)).toHaveAttribute('data-feedback', 'ready', {
+      timeout: Math.max(15000, step.seconds * 1000 + 5000),
+    });
+    await interact(step.station);
+    await expect(page.locator('#hand')).toHaveText(items.get(kind)!.name.vi);
+  };
+  await page.locator('.game-tools [data-action="recipe"]').click();
+  await page.locator(`[data-recipe="${recipe.id}"]`).click();
+  await page.locator('.notebook-close').click();
+  await interact('rack');
+  await expect(page.locator('#hand')).not.toHaveText('Tay trống');
+  await interact('assembly');
+  await expect(page.locator('#hand')).toHaveText('Tay trống');
+  for (const component of recipe.components) {
+    await prepare(component);
+    await interact('assembly');
+    await expect(page.locator('#hand')).toHaveText('Tay trống');
   }
-  await station(page, 'board', name(cold.output));
-  await station(page, 'assembly', 'Tay trống');
-  await expect(page.locator('[data-station="stove"] small')).toHaveText('Sẵn sàng');
-  await station(page, 'stove', name(hot.output));
-  await station(page, 'assembly', 'Tay trống');
-  await station(page, 'bun', name(level.stations.find((s) => s.id === 'bun')!.ingredient!));
-  await station(page, 'assembly');
   await expect(page.locator('#label-assembly small')).toContainText(recipe.name.vi);
 }
 
@@ -97,28 +113,47 @@ for (const restaurant of restaurants)
         else await expect(page.locator('#label-meat')).toHaveAttribute('aria-hidden', 'true');
         await expect(page.locator('#label-meat')).toHaveAttribute('data-context', 'idle');
         await page.mouse.move(viewport.width - 5, viewport.height - 5);
-        await expect(page.locator('#label-meat')).toHaveCSS('opacity', '0.42');
-        const rendered = await page.locator('canvas').evaluate((element) => {
-          const canvas = element as HTMLCanvasElement;
-          const gl = canvas.getContext('webgl2') as WebGL2RenderingContext | null;
-          if (!gl) return { width: canvas.width, height: canvas.height, distinctPixels: 0 };
-          const sample = new Uint8Array(4);
-          const colors = new Set<string>();
-          for (let y = 0.08; y < 0.94; y += 0.09)
-            for (let x = 0.04; x < 0.96; x += 0.08) {
-              gl.readPixels(
-                Math.floor(canvas.width * x),
-                Math.floor(canvas.height * y),
-                1,
-                1,
-                gl.RGBA,
-                gl.UNSIGNED_BYTE,
-                sample,
+        // Chaotic Pop keeps idle station labels more visible than the previous muted UI.
+        await expect(page.locator('#label-meat')).toHaveCSS('opacity', '0.7');
+        const rendered = await page.locator('canvas').evaluate(
+          (element) =>
+            new Promise<{ width: number; height: number; distinctPixels: number }>((resolve) => {
+              const canvas = element as HTMLCanvasElement;
+              // WebGL clears non-preserved buffers after compositing. Read in the render callback,
+              // retaining the exact same pixel-diversity assertions without imposing a runtime cost.
+              canvas.dispatchEvent(
+                new CustomEvent('kitchen-read-frame', {
+                  detail: () => {
+                    const gl = canvas.getContext('webgl2') as WebGL2RenderingContext | null;
+                    if (!gl) {
+                      resolve({ width: canvas.width, height: canvas.height, distinctPixels: 0 });
+                      return;
+                    }
+                    const sample = new Uint8Array(4);
+                    const colors = new Set<string>();
+                    for (let y = 0.08; y < 0.94; y += 0.09)
+                      for (let x = 0.04; x < 0.96; x += 0.08) {
+                        gl.readPixels(
+                          Math.floor(canvas.width * x),
+                          Math.floor(canvas.height * y),
+                          1,
+                          1,
+                          gl.RGBA,
+                          gl.UNSIGNED_BYTE,
+                          sample,
+                        );
+                        colors.add(`${sample[0]},${sample[1]},${sample[2]}`);
+                      }
+                    resolve({
+                      width: canvas.width,
+                      height: canvas.height,
+                      distinctPixels: colors.size,
+                    });
+                  },
+                }),
               );
-              colors.add(`${sample[0]},${sample[1]},${sample[2]}`);
-            }
-          return { width: canvas.width, height: canvas.height, distinctPixels: colors.size };
-        });
+            }),
+        );
         expect(rendered.width).toBeGreaterThan(320);
         expect(rendered.height).toBeGreaterThan(320);
         expect(rendered.distinctPixels).toBeGreaterThan(8);

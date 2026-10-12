@@ -1,7 +1,10 @@
 node_modules/
 dist/
 .env
+.env.account.local*
 test-results/
+test-results-lobby/
+test-results-lobby-fixed/
 playwright-report/
 *.log
 .tools/

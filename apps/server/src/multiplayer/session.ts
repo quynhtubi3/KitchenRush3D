@@ -1,6 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { Game } from '../simulation/game';
 import { level } from '../../../../packages/content/src/index';
-import { getLevel, scaledLevel } from '../../../../packages/content/src/campaign';
+import {
+  getLevel,
+  levels as campaignLevels,
+  scaledLevel,
+} from '../../../../packages/content/src/campaign';
 import {
   EMOTES,
   QUICK_CHAT,
@@ -25,6 +30,8 @@ export class KitchenSession {
   readonly info: SessionState;
   private signalSerial = 0;
   private socialTimes = new Map<string, number>();
+  private lastResultMatchId = '';
+  private hasStarted = false;
   constructor(
     code: string,
     visibility: 'private' | 'public',
@@ -33,7 +40,7 @@ export class KitchenSession {
   ) {
     if (![2, 3, 4].includes(capacity)) throw new Error('invalidTeamSize');
     getLevel(levelId);
-    this.game = new Game({ id: levelId }, code);
+    this.game = this.createGame({ id: levelId });
     this.game.state.phase = 'lobby';
     this.info = {
       code,
@@ -43,6 +50,7 @@ export class KitchenSession {
       levelId,
       members: [],
       startedSize: 0,
+      teamStreak: 0,
       votes: [],
       targetScore: level.targetScore,
       targetOrders: level.targetOrders,
@@ -51,6 +59,9 @@ export class KitchenSession {
   }
   snapshot(): Snapshot {
     return { ...this.game.state, session: this.info };
+  }
+  private createGame(config: Partial<typeof level>) {
+    return new Game(config, randomUUID());
   }
   join(id: string) {
     if (this.game.state.phase !== 'lobby' || this.info.members.length >= this.info.capacity)
@@ -125,6 +136,31 @@ export class KitchenSession {
       this.start();
       return null;
     }
+    if (p.type === 'continue') {
+      const result = this.game.state.result;
+      if (this.game.state.phase !== 'finished' || !result || id !== this.info.host)
+        return 'invalidCommand';
+      if (typeof p.levelId !== 'string') return 'invalidCommand';
+      const currentIndex = campaignLevels.findIndex((l) => l.id === this.info.levelId);
+      const nextLevelId = campaignLevels[currentIndex + 1]?.id;
+      const isRematch = p.levelId === this.info.levelId;
+      const isNextWin = result.won && p.levelId === nextLevelId;
+      if (!isRematch && !isNextWin) return 'invalidCommand';
+      this.info.levelId = p.levelId;
+      this.info.startedSize = 0;
+      this.info.votes = [];
+      this.info.signals = [];
+      this.resetReady();
+      this.game = this.createGame({ id: p.levelId });
+      this.game.state.phase = 'lobby';
+      for (const member of this.info.members) {
+        this.game.addChef(member.id, member.slot);
+        this.game.state.chefs[member.id]!.connected = member.connected;
+      }
+      this.info.targetScore = getLevel(p.levelId).targetScore;
+      this.info.targetOrders = getLevel(p.levelId).targetOrders;
+      return null;
+    }
     if (p.type === 'voteFinish') {
       if (
         this.game.state.phase !== 'playing' ||
@@ -170,15 +206,16 @@ export class KitchenSession {
       this.game.state.phase === 'lobby' &&
       m.length >= 2 &&
       m.every((p) => p.connected && p.ready) &&
-      (this.info.visibility === 'private' || m.length === this.info.capacity)
+      (this.info.visibility === 'private' || this.hasStarted || m.length === this.info.capacity)
     );
   }
   private start() {
+    this.hasStarted = true;
     this.info.startedSize = this.info.members.length;
     const config = teamConfig(this.info.startedSize, this.info.levelId);
     this.info.targetScore = config.targetScore;
     this.info.targetOrders = config.targetOrders;
-    this.game = new Game(config, this.info.code);
+    this.game = this.createGame(config);
     this.info.members.forEach((m) => this.game.addChef(m.id, m.slot));
   }
   private checkVote() {
@@ -193,7 +230,12 @@ export class KitchenSession {
     this.annotateResult();
   }
   private annotateResult() {
-    if (this.game.state.result) this.game.state.result.teamSize = this.info.startedSize;
+    if (!this.game.state.result) return;
+    this.game.state.result.teamSize = this.info.startedSize;
+    if (this.game.state.result.matchId !== this.lastResultMatchId) {
+      this.lastResultMatchId = this.game.state.result.matchId;
+      this.info.teamStreak = this.game.state.result.won ? this.info.teamStreak + 1 : 0;
+    }
   }
   tick(dt: number) {
     this.game.tick(dt);

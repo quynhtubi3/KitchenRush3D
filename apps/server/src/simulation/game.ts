@@ -4,6 +4,7 @@ import {
   recipeById,
   dishRecipe,
   customerTypes,
+  pickOrderRecipe,
 } from '../../../../packages/content/src/campaign';
 import type {
   Chef,
@@ -26,11 +27,14 @@ export class Game {
   readonly content;
   private guestSerial = 0;
   private itemSerial = 0;
+  private randomState = 0;
+  private previousRecipe?: string;
   constructor(
     config: Partial<typeof level> = {},
     readonly matchId = 'local',
   ) {
     this.content = getLevel(config.id ?? level.id);
+    this.randomState = this.seed(`${matchId}:${this.content.id}`);
     this.config = {
       ...this.content,
       ...config,
@@ -113,6 +117,10 @@ export class Game {
       return;
     }
     if (this.state.phase !== 'playing') return;
+    if (intent.type === 'selectRecipe') {
+      if (this.content.recipes.includes(intent.recipe)) chef.preferredRecipe = intent.recipe;
+      return;
+    }
     if (intent.type === 'finish') {
       if (this.canWin()) this.finish();
       return;
@@ -231,30 +239,29 @@ export class Game {
           put();
           return;
         }
-        if (
-          s.item?.kind === 'plate' &&
-          hand &&
-          this.content.recipes.some((id) => {
-            const r = recipeById(id);
-            return (
-              r.components.includes(hand.kind) &&
-              s.item!.parts.every((p) => r.components.includes(p))
-            );
-          }) &&
-          !s.item.parts.includes(hand.kind)
-        ) {
+        if (s.item?.kind === 'plate' && hand && !s.item.parts.includes(hand.kind)) {
+          const target = s.item.assemblyRecipe
+            ? recipeById(s.item.assemblyRecipe)
+            : this.assemblyTarget(hand.kind, c.preferredRecipe);
+          if (
+            !target ||
+            !target.components.includes(hand.kind) ||
+            !s.item.parts.every((part) => target.components.includes(part))
+          )
+            break;
+          s.item.assemblyRecipe = target.id;
           s.item.parts.push(hand.kind);
+          s.item.assemblyChefs ??= [];
+          if (!s.item.assemblyChefs.includes(c.id)) s.item.assemblyChefs.push(c.id);
+          // Selection starts one plate; it must not silently override later orders.
+          delete c.preferredRecipe;
           c.item = null;
           this.event('assembled');
-          const complete = this.content.recipes
-            .map(recipeById)
-            .find(
-              (r) =>
-                r.components.length === s.item!.parts.length &&
-                r.components.every((k) => s.item!.parts.includes(k)),
-            );
-          if (complete) {
-            s.item.kind = complete.steps.at(-1)!.output;
+          if (
+            target.components.length === s.item.parts.length &&
+            target.components.every((component) => s.item!.parts.includes(component))
+          ) {
+            s.item.kind = target.steps.at(-1)!.output;
             this.event('dishReady');
           }
           return;
@@ -294,8 +301,12 @@ export class Game {
               (this.config.speedBonus * customer.patience) / customer.maxPatience) *
               bonus,
           );
+          const crewRelay =
+            Object.values(this.state.chefs).filter((chef) => chef.connected).length > 1 &&
+            hand.assemblyChefs?.some((chefId) => chefId !== c.id);
+          if (crewRelay) this.state.score += 50;
           this.serviceTotal += customer.maxPatience - customer.patience;
-          this.event('served');
+          this.event(crewRelay ? 'teamRelay' : 'served');
           return;
         }
         break;
@@ -325,7 +336,14 @@ export class Game {
   private spawn() {
     if (this.state.customers.filter((c) => !c.seat).length >= this.config.queueLimit) return;
     const type = this.content.customers[this.guestSerial++ % this.content.customers.length];
-    const recipe = type === 'complex' ? this.content.recipes.at(-1)! : this.content.recipes[0];
+    const recipe = pickOrderRecipe(
+      this.content.recipes,
+      this.content.recipeWeights,
+      this.previousRecipe,
+      this.random(),
+      type === 'complex',
+    );
+    this.previousRecipe = recipe;
     this.state.customers.push({
       type,
       id: `guest-${++this.serial}`,
@@ -336,6 +354,43 @@ export class Game {
       timer: 0.5,
       recipe,
     });
+  }
+  private assemblyTarget(component: string, preferred?: string) {
+    if (preferred && this.content.recipes.includes(preferred)) {
+      const recipe = recipeById(preferred);
+      if (recipe.components.includes(component)) return recipe;
+    }
+    const rank: Record<string, number> = {
+      WaitingForFood: 0,
+      Seated: 1,
+      Queueing: 2,
+      Arriving: 3,
+    };
+    const customer = [...this.state.customers]
+      .filter((entry) => entry.state in rank)
+      .sort((a, b) => rank[a.state] - rank[b.state])
+      .find((entry) => recipeById(entry.recipe).components.includes(component));
+    if (customer) return recipeById(customer.recipe);
+    return this.content.recipes
+      .map(recipeById)
+      .filter((recipe) => recipe.components.includes(component))
+      .sort((a, b) => a.components.length - b.components.length)[0];
+  }
+  private seed(value: string) {
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i++) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0 || 1;
+  }
+  private random() {
+    let value = this.randomState;
+    value ^= value << 13;
+    value ^= value >>> 17;
+    value ^= value << 5;
+    this.randomState = value >>> 0 || 1;
+    return this.randomState / 0x100000000;
   }
   private admit() {
     for (const seat of this.state.stations.filter((s) => s.kind === 'seat')) {
@@ -378,6 +433,7 @@ export class Game {
             if (s.item) {
               s.item.kind = 'dirtyPlate';
               s.item.parts = [];
+              delete s.item.assemblyRecipe;
             }
             this.removeCustomer(c);
           }

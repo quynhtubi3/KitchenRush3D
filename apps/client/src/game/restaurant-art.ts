@@ -7,16 +7,21 @@ import { floorPixels } from './floor-texture';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { StationDefinition } from '../../../../packages/shared/src/types';
+import { restaurantPopThemes } from './chaotic-pop-theme';
+import { restaurantGraphics } from './restaurant-graphics';
+import { visualGroundY } from './world-art';
 
 const floorMaterials = new WeakMap<Scene, Map<string, PBRMaterial>>();
-function floorMaterial(scene: Scene, id: string) {
+export function floorMaterial(scene: Scene, id: string) {
   let materials = floorMaterials.get(scene);
   if (!materials) floorMaterials.set(scene, (materials = new Map()));
   let material = materials.get(id);
   if (!material) {
     material = new PBRMaterial(`${id}-authored-floor`, scene);
-    material.albedoTexture = RawTexture.CreateRGBATexture(floorPixels(id), 256, 256, scene);
-    material.roughness = 0.88;
+    const texture = RawTexture.CreateRGBATexture(floorPixels(id, 512), 512, 512, scene);
+    texture.anisotropicFilteringLevel = 4;
+    material.albedoTexture = texture;
+    material.roughness = id === 'tide' ? 0.68 : id === 'little-sun' ? 0.76 : 0.88;
     material.metallic = 0;
     materials.set(id, material);
   }
@@ -94,43 +99,7 @@ export interface ArtTools {
     scale?: number,
   ): Mesh;
 }
-const themes = {
-  'little-sun': {
-    cabinet: '#356f65',
-    wood: '#704733',
-    accent: '#edb64f',
-    floor: '#ead3a8',
-    wall: '#f3dfb8',
-  },
-  tide: {
-    cabinet: '#698c99',
-    wood: '#b08a5d',
-    accent: '#d9b57b',
-    floor: '#cdb995',
-    wall: '#e6e2c9',
-  },
-  olive: {
-    cabinet: '#778458',
-    wood: '#805744',
-    accent: '#ceaa68',
-    floor: '#ba7960',
-    wall: '#efdcaf',
-  },
-  lantern: {
-    cabinet: '#934a3f',
-    wood: '#573e36',
-    accent: '#e5aa50',
-    floor: '#b29375',
-    wall: '#ead0a1',
-  },
-  orbit: {
-    cabinet: '#7775a1',
-    wood: '#414960',
-    accent: '#70d9d1',
-    floor: '#6b7b91',
-    wall: '#b8c7ce',
-  },
-};
+const themes = restaurantPopThemes;
 export function restaurantArt(id: string) {
   return themes[id as keyof typeof themes] ?? themes['little-sun'];
 }
@@ -145,7 +114,7 @@ export function buildRestaurant(a: ArtTools, id: string) {
     a.scene,
   );
   ground.parent = room;
-  ground.position.y = -0.045;
+  ground.position.y = visualGroundY;
   ground.receiveShadows = true;
   ground.isPickable = true;
   ground.material = floorMaterial(a.scene, id);
@@ -398,6 +367,7 @@ export function buildRestaurant(a: ArtTools, id: string) {
         ).scaling.set(0.7, 1.5, 0.7);
     }
   }
+  restaurantGraphics(a, room, id);
   // Architecture must not intercept floor touches or station selection.
   room.getChildMeshes().forEach((m) => (m.isPickable = m.name === 'walkable floor input'));
   // Dedicated ground carries input without changing collision/pathfinding.
@@ -428,6 +398,30 @@ export function dressStation(
       0.3,
       0.5,
     );
+  }
+  // One large readable detail per appliance; merged with its existing material group.
+  if (def.kind === 'stove') {
+    const dial = a.cylinder(
+      'oversized enamel heat dial',
+      0.23,
+      0.09,
+      t.accent,
+      station,
+      0.18,
+      0.69,
+      0.57,
+    );
+    dial.rotation.x = Math.PI / 2;
+    a.box('heat dial pointer', 0.035, 0.085, 0.025, 0.008, t.wood, station, 0.18, 0.73, 0.63);
+  } else if (def.kind === 'board' && def.id !== 'mixer') {
+    a.box('thick chopping board grip', 0.2, 0.08, 0.24, 0.045, t.wood, station, 0.35, 1.0, 0.04);
+  } else if (def.kind === 'sink') {
+    for (const x of [-0.25, 0.25])
+      a.sphere('chunky faucet tap', 0.16, t.accent, station, x, 1.09, -0.24);
+  } else if (def.kind === 'assembly' || def.kind === 'counter') {
+    a.box('chunky counter pull', 0.38, 0.07, 0.11, 0.025, t.accent, station, 0, 0.66, 0.49);
+  } else if (def.kind === 'dispenser') {
+    a.box('dispenser front lip', 0.62, 0.13, 0.08, 0.035, t.accent, station, 0, 1.01, 0.42);
   }
   if (def.id === 'mixer') {
     a.lathe(
@@ -560,6 +554,8 @@ export function dressStation(
 export function cuisineFood(a: ArtTools, p: TransformNode, kind: string): boolean {
   const [id, stage] = kind.split('-');
   if (!['tide', 'olive', 'lantern', 'orbit'].includes(id)) return false;
+  if (!['raw', 'hot', 'green', 'cut', 'side', 'crisp', 'premium'].includes(stage)) return false;
+  if (kind.split('-').length > 2 && stage === 'side' && !kind.endsWith('-prepared')) return false;
   const cooked = stage === 'hot' || stage === 'cut' || stage === 'crisp';
   if (kind.endsWith('-prepared'))
     for (let i = 0; i < 3; i++)

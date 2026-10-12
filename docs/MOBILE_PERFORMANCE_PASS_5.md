@@ -1,5 +1,7 @@
 # Pass 5 — Retina resolution and device readiness
 
+2026-10-12 update: [Chaotic Pop Pass 2](CHAOTIC_POP_PASS2_IMPLEMENTATION.md) supersedes the render/effect descriptions below. Resolution policy is preserved; touch Balanced now targets 30 FPS with a 512px Poisson shadow map at 10 Hz, Low 24 FPS/contact shadows, High 60 FPS/768px blurred shadows. Touch effects are capped at 12 (Low 6, Reduced Motion 0). Hidden tabs stop the render loop; buffer preservation and unused stencil are disabled. Worktable feet now reach the floor, cast shadows and share one soft contact batch. The original Pass 5 verification numbers below are historical. Physical iPhone sharpness, sustained performance and temperature acceptance remain open.
+
 2026-10-09. Priority 0 implemented and Chromium-tested; **the iPhone blur fix is not yet accepted on physical Safari devices**. Broader Pass 5 optimization remains incomplete.
 
 ## Root cause found in code

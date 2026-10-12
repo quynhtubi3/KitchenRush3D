@@ -75,6 +75,116 @@ const deluxe = recipeSchema.parse({
 });
 recipes.push(deluxe);
 
+function addRecipe(value: unknown) {
+  const parsed = recipeSchema.parse(value);
+  recipes.push(parsed);
+  return parsed;
+}
+
+// Little Sun teaches one new action at a time before the complete menu opens.
+const cheese = item('cheese', 'Phô mai', 'Cheese', '#f2c64c');
+const slicedCheese = item('slicedCheese', 'Phô mai lát', 'Sliced cheese', '#ffd85c');
+const chicken = item('chicken', 'Thịt gà sống', 'Raw chicken', '#e69a83');
+const friedChicken = item('friedChicken', 'Gà giòn', 'Crispy chicken', '#bf7040');
+const potato = item('potato', 'Khoai tây', 'Potato', '#c99b62');
+const cutPotato = item('cutPotato', 'Khoai tây cắt', 'Cut potato', '#e6bd78');
+const cookedFries = item('cookedFries', 'Khoai tây vàng giòn', 'Golden fries', '#edbd54');
+item('fries', 'Khoai tây chiên', 'French fries', '#edbd54');
+const cheeseBurger = addRecipe({
+  id: 'sunshine-cheeseburger',
+  name: { vi: 'Burger Phô Mai Nắng Mai', en: 'Sunshine cheeseburger' },
+  components: ['bun', 'cookedMeat', 'choppedLettuce', slicedCheese],
+  eatSeconds: 7,
+  baseScore: 125,
+  steps: [
+    ...burger.steps.slice(0, 2),
+    {
+      id: 'slice-cheese',
+      station: 'board',
+      inputs: [cheese],
+      output: slicedCheese,
+      dependsOn: [],
+      seconds: 0,
+      taps: 2,
+    },
+    {
+      id: 'assemble',
+      station: 'assembly',
+      inputs: ['plate', 'bun', 'cookedMeat', 'choppedLettuce', slicedCheese],
+      output: 'cheeseburger',
+      dependsOn: ['grill', 'chop', 'slice-cheese'],
+      seconds: 0,
+      taps: 0,
+    },
+  ],
+});
+item('cheeseburger', 'Burger phô mai', 'Cheeseburger', '#d9a84e');
+const chickenBurger = addRecipe({
+  id: 'sunshine-chicken-burger',
+  name: { vi: 'Burger Gà Giòn', en: 'Crispy chicken burger' },
+  components: ['bun', friedChicken, 'choppedLettuce'],
+  eatSeconds: 7,
+  baseScore: 135,
+  steps: [
+    {
+      id: 'fry-chicken',
+      station: 'stove',
+      inputs: [chicken],
+      output: friedChicken,
+      dependsOn: [],
+      seconds: 8,
+      taps: 0,
+    },
+    { ...burger.steps[1] },
+    {
+      id: 'assemble',
+      station: 'assembly',
+      inputs: ['plate', 'bun', friedChicken, 'choppedLettuce'],
+      output: 'chicken-burger',
+      dependsOn: ['fry-chicken', 'chop'],
+      seconds: 0,
+      taps: 0,
+    },
+  ],
+});
+item('chicken-burger', 'Burger gà giòn', 'Chicken burger', '#d28a4d');
+addRecipe({
+  id: 'sunshine-fries',
+  name: { vi: 'Khoai tây chiên Nắng Mai', en: 'Sunshine fries' },
+  components: [cookedFries],
+  eatSeconds: 5,
+  baseScore: 95,
+  steps: [
+    {
+      id: 'cut-potato',
+      station: 'board',
+      inputs: [potato],
+      output: cutPotato,
+      dependsOn: [],
+      seconds: 0,
+      taps: 3,
+    },
+    {
+      id: 'fry-potato',
+      station: 'stove',
+      inputs: [cutPotato],
+      output: cookedFries,
+      dependsOn: ['cut-potato'],
+      seconds: 7,
+      taps: 0,
+    },
+    {
+      id: 'assemble',
+      station: 'assembly',
+      inputs: ['plate', cookedFries],
+      output: 'fries',
+      dependsOn: ['fry-potato'],
+      seconds: 0,
+      taps: 0,
+    },
+  ],
+});
+
 // Each cuisine has independent hot/cold branches and a premium branch with a second process.
 const cuisines = [
   [
@@ -218,9 +328,210 @@ for (const [id, av, ae, bv, be, cv, ce, dv, de, ev, ee, fv, fe, rv, re, color] o
     );
   }
 }
+const regionalSpecials = {
+  tide: {
+    a: {
+      raw: ['Cá ngừ', 'Tuna'],
+      cooked: ['Cá ngừ áp chảo', 'Seared tuna'],
+      dish: ['Nigiri Cá Ngừ', 'Seared Tuna Nigiri'],
+      color: '#d27b62',
+    },
+    b: ['Tempura Thủy Triều', 'Tide Tempura Roll'],
+    c: {
+      raw: ['Trứng cá', 'Roe'],
+      prepared: ['Trứng cá trộn', 'Seasoned roe'],
+      cooked: ['Nhân cuộn biển', 'Ocean roll filling'],
+      dish: ['Cuộn Rồng Biển', 'Tide Dragon Roll'],
+      color: '#df865c',
+    },
+  },
+  olive: {
+    a: {
+      raw: ['Thịt gà', 'Chicken'],
+      cooked: ['Gà sốt ôliu', 'Olive chicken'],
+      dish: ['Mì Gà Sốt Ôliu', 'Olive Chicken Pasta'],
+      color: '#d18e69',
+    },
+    b: ['Mì Bruschetta Ôliu', 'Olive Bruschetta Pasta'],
+    c: {
+      raw: ['Phô mai tươi', 'Fresh cheese'],
+      prepared: ['Phô mai trộn', 'Seasoned cheese'],
+      cooked: ['Phô mai nướng', 'Baked cheese'],
+      dish: ['Mì Nướng Vườn Ôliu', 'Olive Garden Bake'],
+      color: '#e2ba6a',
+    },
+  },
+  lantern: {
+    a: {
+      raw: ['Thịt bò', 'Beef'],
+      cooked: ['Bò xào cay', 'Spicy wok beef'],
+      dish: ['Mì Bò Chảo Lửa', 'Fire Wok Beef Noodles'],
+      color: '#c97b58',
+    },
+    b: ['Đậu Phụ Giòn Đèn Lồng', 'Lantern Crispy Tofu'],
+    c: {
+      raw: ['Vỏ hoành thánh', 'Dumpling wrappers'],
+      prepared: ['Vỏ hoành thánh trộn', 'Seasoned wrappers'],
+      cooked: ['Hoành thánh hấp', 'Roasted dumplings'],
+      dish: ['Hoành Thánh Đèn Lồng', 'Lantern Dumplings'],
+      color: '#d78d54',
+    },
+  },
+  orbit: {
+    a: {
+      raw: ['Nấm thiên thạch', 'Meteor mushrooms'],
+      cooked: ['Nấm áp chảo', 'Seared mushrooms'],
+      dish: ['Tô Nấm Thiên Thạch', 'Meteor Mushroom Bowl'],
+      color: '#a58ac2',
+    },
+    b: ['Bánh Sao Giòn', 'Orbit Star Crisp'],
+    c: {
+      raw: ['Rong sao', 'Comet greens'],
+      prepared: ['Rong sao trộn', 'Seasoned comet greens'],
+      cooked: ['Rong sao nướng', 'Roasted comet greens'],
+      dish: ['Đĩa Siêu Tân Tinh', 'Supernova Platter'],
+      color: '#67bfa3',
+    },
+  },
+} as const;
+
+// New recipes are assembled from independent, executable preparation branches.
+for (const id of ['tide', 'olive', 'lantern', 'orbit'] as const) {
+  const base = recipes.find((r) => r.id === `${id}-dish`)!;
+  const [hot, cold] = base.steps;
+  const side = base.components.find(
+    (component) => !base.steps.some((step) => step.output === component),
+  )!;
+  const spec = regionalSpecials[id as keyof typeof regionalSpecials];
+  const aRaw = item(`${id}-signature-raw`, spec.a.raw[0], spec.a.raw[1], spec.a.color);
+  const aCooked = item(`${id}-signature-cooked`, spec.a.cooked[0], spec.a.cooked[1], spec.a.color);
+  const aDish = item(`${id}-signature-plate`, spec.a.dish[0], spec.a.dish[1], spec.a.color);
+  addRecipe({
+    id: `${id}-signature-a`,
+    name: { vi: spec.a.dish[0], en: spec.a.dish[1] },
+    components: [hot.output, cold.output, aCooked],
+    eatSeconds: 7,
+    baseScore: 130,
+    steps: [
+      { ...hot, dependsOn: [...hot.dependsOn] },
+      { ...cold, dependsOn: [...cold.dependsOn] },
+      {
+        id: 'signature',
+        station: 'stove',
+        inputs: [aRaw],
+        output: aCooked,
+        dependsOn: [],
+        seconds: 8,
+        taps: 0,
+      },
+      {
+        id: 'assemble',
+        station: 'assembly',
+        inputs: ['plate', hot.output, cold.output, aCooked],
+        output: aDish,
+        dependsOn: [hot.id, cold.id, 'signature'],
+        seconds: 0,
+        taps: 0,
+      },
+    ],
+  });
+
+  const sidePrepared = item(`${id}-side-prepared`, 'Món phụ đã sơ chế', 'Prepared side', '#d8b36c');
+  const sideCooked = item(`${id}-side-cooked`, 'Món phụ giòn', 'Crisped side', '#c58b4b');
+  const bDish = item(`${id}-signature-b-plate`, spec.b[0], spec.b[1], '#d08e58');
+  addRecipe({
+    id: `${id}-signature-b`,
+    name: { vi: spec.b[0], en: spec.b[1] },
+    components: [hot.output, cold.output, sideCooked],
+    eatSeconds: 8,
+    baseScore: 145,
+    steps: [
+      { ...hot, dependsOn: [...hot.dependsOn] },
+      { ...cold, dependsOn: [...cold.dependsOn] },
+      {
+        id: 'side-prep',
+        station: 'board',
+        inputs: [side],
+        output: sidePrepared,
+        dependsOn: [],
+        seconds: 0,
+        taps: 2,
+      },
+      {
+        id: 'side-cook',
+        station: 'stove',
+        inputs: [sidePrepared],
+        output: sideCooked,
+        dependsOn: ['side-prep'],
+        seconds: 5,
+        taps: 0,
+      },
+      {
+        id: 'assemble',
+        station: 'assembly',
+        inputs: ['plate', hot.output, cold.output, sideCooked],
+        output: bDish,
+        dependsOn: [hot.id, cold.id, 'side-cook'],
+        seconds: 0,
+        taps: 0,
+      },
+    ],
+  });
+
+  const cRaw = item(`${id}-late-raw`, spec.c.raw[0], spec.c.raw[1], spec.c.color);
+  const cPrepared = item(
+    `${id}-late-prepared`,
+    spec.c.prepared[0],
+    spec.c.prepared[1],
+    spec.c.color,
+  );
+  const cCooked = item(`${id}-late-cooked`, spec.c.cooked[0], spec.c.cooked[1], spec.c.color);
+  const cDish = item(`${id}-signature-c-plate`, spec.c.dish[0], spec.c.dish[1], spec.c.color);
+  addRecipe({
+    id: `${id}-signature-c`,
+    name: { vi: spec.c.dish[0], en: spec.c.dish[1] },
+    components: [hot.output, cold.output, cCooked],
+    eatSeconds: 9,
+    baseScore: 165,
+    steps: [
+      { ...hot, dependsOn: [...hot.dependsOn] },
+      { ...cold, dependsOn: [...cold.dependsOn] },
+      {
+        id: 'late-mix',
+        station: 'mixer',
+        inputs: [cRaw],
+        output: cPrepared,
+        dependsOn: [],
+        seconds: 0,
+        taps: 2,
+      },
+      {
+        id: 'late-roast',
+        station: 'oven',
+        inputs: [cPrepared],
+        output: cCooked,
+        dependsOn: ['late-mix'],
+        seconds: 6,
+        taps: 0,
+      },
+      {
+        id: 'assemble',
+        station: 'assembly',
+        inputs: ['plate', hot.output, cold.output, cCooked],
+        output: cDish,
+        dependsOn: [hot.id, cold.id, 'late-roast'],
+        seconds: 0,
+        taps: 0,
+      },
+    ],
+  });
+}
+
 // Premium sides require active preparation followed by unattended cooking.
 // The hot and cold branches remain independent of this two-stage side branch.
-for (const r of recipes.filter((_, i) => i % 2 === 1)) {
+for (const r of recipes.filter(
+  (recipe) => recipe.id === 'toasted-burger' || recipe.id.endsWith('-premium'),
+)) {
   const cooking = r.steps.find((s) => s.station === 'oven')!;
   const raw = items.get(cooking.inputs[0])!;
   const prepared = item(
@@ -247,6 +558,34 @@ export const recipeById = (id: string) => {
   return r;
 };
 export const dishRecipe = (kind: string) => recipes.find((r) => r.steps.at(-1)!.output === kind);
+
+/** Weighted server-side order selection; a customer never repeats the last dish when alternatives exist. */
+export function pickOrderRecipe(
+  menu: readonly string[],
+  weights: readonly { recipeId: string; weight: number }[],
+  previous: string | undefined,
+  roll: number,
+  complex = false,
+) {
+  if (!menu.length) throw new Error('Empty recipe menu');
+  if (complex) {
+    // Prefer the longest eligible graph, breaking ties toward later unlocks.
+    // Excluding the last dish first prevents a one-recipe streak in narrow menus.
+    const eligible = menu.length > 1 && previous ? menu.filter((id) => id !== previous) : [...menu];
+    const longest = Math.max(...eligible.map((id) => recipeById(id).steps.length));
+    return eligible.filter((id) => recipeById(id).steps.length === longest).at(-1)!;
+  }
+  const pool = menu.length > 1 && previous ? menu.filter((id) => id !== previous) : [...menu];
+  const byId = new Map(weights.map(({ recipeId, weight }) => [recipeId, weight]));
+  const total = pool.reduce((sum, id) => sum + (byId.get(id) ?? 0), 0);
+  if (!(total > 0)) throw new Error('Recipe weights do not cover menu');
+  let cursor = Math.max(0, Math.min(0.999999999, roll)) * total;
+  for (const id of pool) {
+    cursor -= byId.get(id) ?? 0;
+    if (cursor < 0) return id;
+  }
+  return pool.at(-1)!;
+}
 
 export const restaurants = [
   {
@@ -368,18 +707,41 @@ export const campaignLevelSchema = levelSchema.extend({
   number: z.number().int().min(1).max(10),
   name,
   recipes: z.array(z.string()).min(1),
+  recipeWeights: z.array(z.object({ recipeId: z.string(), weight: z.number().positive() })).min(1),
   customers: z.array(z.enum(['regular', 'vip', 'impatient', 'complex', 'combo'])).min(1),
   stations: z.array(stationSchema).min(10),
   tutorial: z.boolean(),
 });
 export type CampaignLevel = z.infer<typeof campaignLevelSchema>;
+const authoredMenus = [
+  [
+    'sunshine-burger',
+    'sunshine-cheeseburger',
+    'sunshine-chicken-burger',
+    'toasted-burger',
+    'sunshine-fries',
+  ],
+  ['tide-dish', 'tide-signature-a', 'tide-signature-b', 'tide-premium', 'tide-signature-c'],
+  ['olive-dish', 'olive-signature-a', 'olive-signature-b', 'olive-premium', 'olive-signature-c'],
+  [
+    'lantern-dish',
+    'lantern-signature-a',
+    'lantern-signature-b',
+    'lantern-premium',
+    'lantern-signature-c',
+  ],
+  ['orbit-dish', 'orbit-signature-a', 'orbit-signature-b', 'orbit-premium', 'orbit-signature-c'],
+] as const;
+const recipeWeights = [4, 3, 2, 2, 1] as const;
 export const levels: CampaignLevel[] = briefs.map(
   ([title, duration, orders, spawn, patience, variation], index) => {
     const restaurant = Math.floor(index / 10),
       number = (index % 10) + 1,
       r = restaurants[restaurant];
-    const basic = recipes[restaurant * 2],
-      premium = recipes[restaurant * 2 + 1];
+    const unlockCount = number >= 10 ? 5 : number >= 5 ? 4 : number >= 3 ? 3 : number >= 2 ? 2 : 1;
+    const menu = authoredMenus[restaurant].slice(0, unlockCount) as string[];
+    const menuRecipes = menu.map((id) => recipes.find((recipe) => recipe.id === id)!);
+    const basic = menuRecipes[0];
     const raw = [
       basic.steps[0].inputs[0],
       basic.steps[1].inputs[0],
@@ -402,9 +764,34 @@ export const levels: CampaignLevel[] = briefs.map(
     assembly.z = restaurant % 2 ? 4 : 5;
     counter.x = [8, 9, 5][variation];
     counter.z = restaurant % 2 ? 6 : 5;
+    const ingredientSources = new Set<string>(raw);
+    for (const recipe of menuRecipes) {
+      for (const input of recipe.steps
+        .filter((step) => step.station !== 'assembly')
+        .flatMap((step) => step.inputs))
+        if (!recipe.steps.some((step) => step.output === input)) ingredientSources.add(input);
+      for (const component of recipe.components)
+        if (!recipe.steps.some((step) => step.output === component))
+          ingredientSources.add(component);
+    }
+    const extraSources = [...ingredientSources].filter(
+      (source) => !raw.includes(source) && source !== 'plate',
+    );
+    const sourceTiles = [
+      // Keep unlocked specialty ingredients together in a front row so the
+      // player can read and reach them without searching behind equipment.
+      { x: 2, z: 7 },
+      { x: 6, z: 7 },
+      { x: 10, z: 7 },
+    ];
+    extraSources.forEach((source, sourceIndex) => {
+      const tile = sourceTiles[sourceIndex];
+      if (!tile) throw new Error(`Too many dispensers for ${r.id}-${number}`);
+      layout.push({ id: `ingredient-${source}`, kind: 'dispenser', ingredient: source, ...tile });
+    });
     if (number >= 5)
       layout.push(
-        { id: 'oven', kind: 'stove', x: 12, z: 1 },
+        { id: 'oven', kind: 'stove', x: 11, z: 2 },
         { id: 'mixer', kind: 'board', x: 3, z: 4 },
       );
     const targetScore = index === 0 ? 220 : orders * 100;
@@ -423,7 +810,11 @@ export const levels: CampaignLevel[] = briefs.map(
       plates: index === 0 ? 2 : 3,
       burnSeconds: 45,
       stations: layout,
-      recipes: number >= 5 ? [basic.id, premium.id] : [basic.id],
+      recipes: menu,
+      recipeWeights: menu.map((recipeId, recipeIndex) => ({
+        recipeId,
+        weight: recipeWeights[recipeIndex],
+      })),
       customers: [
         'regular',
         ...(number >= 3 ? ['vip'] : []),
@@ -493,6 +884,8 @@ export function validateCampaign() {
     throw new Error('Expected five restaurants');
   if (levels.length !== 50 || new Set(levels.map((l) => l.id)).size !== 50)
     throw new Error('Expected 50 unique levels');
+  if (recipes.length !== 25 || new Set(recipes.map((recipe) => recipe.id)).size !== 25)
+    throw new Error('Expected five playable recipes per restaurant');
   for (const l of levels) {
     campaignLevelSchema.parse(l);
     if (
@@ -502,6 +895,12 @@ export function validateCampaign() {
       throw new Error('Invalid restaurant levels');
     if (l.stars[0] !== l.targetScore || l.stars[1] < l.stars[0] || l.stars[2] < l.stars[1])
       throw new Error('Invalid star thresholds');
+    if (
+      l.recipeWeights.length !== l.recipes.length ||
+      new Set(l.recipeWeights.map((entry) => entry.recipeId)).size !== l.recipes.length ||
+      l.recipeWeights.some((entry) => !l.recipes.includes(entry.recipeId))
+    )
+      throw new Error(`Invalid recipe weights ${l.id}`);
     if (
       l.stations.some((s) => s.kind === 'dispenser' && (!s.ingredient || !items.has(s.ingredient)))
     )

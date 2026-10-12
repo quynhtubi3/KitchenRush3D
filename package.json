@@ -15,9 +15,10 @@
     "test:e2e": "playwright test",
     "db:migrate": "tsx database/migrate.ts",
     "db:seed": "tsx database/seed.ts",
+    "accounts:verify-email": "tsx scripts/verify-account-email.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:db": "vitest run tests/postgres-account.integration.test.ts"
+    "test:db": "vitest run tests/postgres-account.integration.test.ts apps/server/tests/account-match.integration.test.ts"
   },
   "overrides": {
     "nanoid": "^3.3.19",

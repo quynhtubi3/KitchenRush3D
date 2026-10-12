@@ -17,7 +17,9 @@ export type CameraFrame = {
 };
 
 export function cameraProfile(width: number, height: number, touch: boolean): CameraProfile {
-  if (!touch) return 'desktop-overview';
+  // Wide touch laptops/tablets use the desktop HUD; phone landscape uses the compact HUD.
+  // Match that layout boundary so the tighter phone framing cannot put stations behind the HUD.
+  if (!touch || (width > height && height > 600)) return 'desktop-overview';
   if (width > height) return 'mobile-landscape';
   if (Math.min(width, height) >= 700) return 'tablet-portrait';
   return 'mobile-portrait';

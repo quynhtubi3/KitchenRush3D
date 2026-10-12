@@ -16,13 +16,13 @@
     "x": 30,
     "y": 95,
     "width": 1860,
-    "height": 83
+    "height": 85
   },
   "orders": {
     "x": 30,
     "y": 191,
-    "width": 384.34375,
-    "height": 80
+    "width": 391.875,
+    "height": 81
   },
   "hand": {
     "x": 30,
@@ -67,103 +67,103 @@
     "stationLabelsOverlapPairs": 0,
     "stationLabelsHiddenForOverlap": 0
   },
-  "gameplayOcclusionPercent": 26.9,
+  "gameplayOcclusionPercent": 27.6,
   "stationLabels": [
     {
       "id": "meat",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 1319,
-      "y": 217
+      "x": 1318,
+      "y": 215
     },
     {
       "id": "stove",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 1147,
-      "y": 217
+      "x": 1146,
+      "y": 215
     },
     {
       "id": "lettuce",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 994,
-      "y": 217
+      "x": 993,
+      "y": 215
     },
     {
       "id": "board",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 860,
-      "y": 217
+      "x": 859,
+      "y": 215
     },
     {
       "id": "bun",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 699,
-      "y": 217
+      "x": 698,
+      "y": 215
     },
     {
       "id": "rack",
-      "context": "idle",
+      "context": "priority",
       "onScreen": true,
       "offscreen": false,
-      "x": 1381,
-      "y": 418
+      "x": 1380,
+      "y": 416
     },
     {
       "id": "sink",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 1384,
-      "y": 570
+      "x": 1383,
+      "y": 568
     },
     {
       "id": "trash",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 1377,
-      "y": 711
+      "x": 1376,
+      "y": 709
     },
     {
       "id": "assembly",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 1001,
-      "y": 499
+      "x": 1000,
+      "y": 497
     },
     {
       "id": "counter",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 832,
-      "y": 499
+      "x": 831,
+      "y": 497
     },
     {
       "id": "seat1",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 539,
-      "y": 418
+      "x": 538,
+      "y": 416
     },
     {
       "id": "seat2",
       "context": "idle",
       "onScreen": true,
       "offscreen": false,
-      "x": 547,
-      "y": 629
+      "x": 546,
+      "y": 627
     }
   ]
 }

@@ -1,0 +1,82 @@
+﻿<!doctype html>
+<html lang="vi">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kitchen Rush — so sánh đồ họa</title>
+  <style>
+    body {
+      margin: 0 auto;
+      padding: 24px;
+      max-width: 1500px;
+      background: #f5efdf;
+      color: #234b43;
+      font: 16px/1.5 system-ui;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    .pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    figure {
+      margin: 0;
+    }
+    img {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: #d9ded6;
+    }
+    figcaption {
+      padding: 8px 0;
+    }
+    .mobile {
+      max-width: 800px;
+    }
+    a {
+      color: #27625b;
+    }
+    select {
+      font: inherit;
+      padding: 8px;
+    }
+  </style>
+  <h1>Kitchen Rush — ảnh gameplay production</h1>
+  <p>
+    Ảnh Chromium, không phải Safari iPhone hay benchmark GPU mobile. Đây là lượt cải thiện bề mặt và
+    nhân vật; phần dựng lại toàn bộ model vẫn chưa hoàn thành.
+  </p>
+  <label
+    >Góc nhìn
+    <select id="viewport">
+      <option value="mobile">Điện thoại — Overview</option>
+      <option value="desktop">Desktop — Overview</option>
+    </select></label
+  >
+  <main id="gallery"></main>
+  <script>
+    const restaurants = [
+      ['little-sun', 'Little Sun Diner'],
+      ['tide', 'Tide Sushi House'],
+      ['olive', 'Olive Garden Kitchen'],
+      ['lantern', 'Lantern Wok'],
+      ['orbit', 'Orbit Kitchen'],
+    ];
+    function render() {
+      const viewport = document.querySelector('#viewport').value;
+      document.querySelector('#gallery').innerHTML = restaurants
+        .map(
+          ([id, name]) =>
+            `<section><h2>${name}</h2><div class="pair ${viewport === 'mobile' ? 'mobile' : ''}"><figure><a href="screenshots/graphics-overhaul-before/${id}-${viewport}.png"><img loading="lazy" src="screenshots/graphics-overhaul-before/${id}-${viewport}.png" alt="${name} trước thay đổi"></a><figcaption>Trước</figcaption></figure><figure><a href="screenshots/graphics-overhaul-surface/${id}-${viewport}.png"><img loading="lazy" src="screenshots/graphics-overhaul-surface/${id}-${viewport}.png" alt="${name} sau cải thiện bề mặt"></a><figcaption>Sau — cùng màn và profile; NPC có thể khác thời điểm</figcaption></figure></div></section>`,
+        )
+        .join('');
+    }
+    document.querySelector('#viewport').addEventListener('change', render);
+    render();
+  </script>
+</html>

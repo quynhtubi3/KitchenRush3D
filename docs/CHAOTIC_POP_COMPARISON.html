@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kitchen Rush 3D — Chaotic Pop visual comparison</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: #fff9e9;
+        background: #25243a;
+      }
+      body {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1,
+      h2 {
+        letter-spacing: -0.03em;
+      }
+      header {
+        border-left: 8px solid #ffc72c;
+        padding: 6px 20px;
+        margin: 8px 0 28px;
+      }
+      p {
+        color: #d8d4e4;
+        line-height: 1.6;
+      }
+      a {
+        color: #ffc72c;
+      }
+      .comparison {
+        margin: 26px 0;
+        padding: 16px;
+        border: 1px solid #ffffff35;
+        border-radius: 16px;
+        background: #ffffff09;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      figure {
+        margin: 0;
+        padding: 8px;
+        border-radius: 12px;
+        background: #ffffff10;
+      }
+      figcaption {
+        padding: 5px 2px 10px;
+        font-weight: 700;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #d8d4e4;
+        border-radius: 8px;
+      }
+      .extras {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+      }
+      @media (max-width: 700px) {
+        body {
+          padding: 12px;
+        }
+        .pair {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Chaotic Pop — before / after</h1>
+      <p>
+        Same selected restaurant level, standard graphics, reduced motion, overview camera and
+        1440×1000 / 390×844 browser viewports for the five controlled pairs. These are actual
+        Chromium renders using SwiftShader, not phone screenshots or GPU benchmarks.
+        <a href="CHAOTIC_POP_VISUAL_AUDIT.md">Read the audit and limits</a>.
+      </p>
+    </header>
+
+    <main id="restaurants">
+      <script>
+        const ids = ['little-sun', 'tide', 'olive', 'lantern', 'orbit'];
+        const names = [
+          'Little Sun Diner',
+          'Tide Sushi House',
+          'Olive Garden Kitchen',
+          'Lantern Wok',
+          'Orbit Kitchen',
+        ];
+        const main = document.querySelector('#restaurants');
+        for (let index = 0; index < ids.length; index++) {
+          const id = ids[index];
+          const section = document.createElement('section');
+          section.className = 'comparison';
+          section.innerHTML = `<h2>${names[index]}</h2><div class="pair">
+            <figure><figcaption>Before · 1440×1000</figcaption><a href="screenshots/chaotic-pop-before/${id}-desktop.png"><img loading="lazy" src="screenshots/chaotic-pop-before/${id}-desktop.png" alt="${names[index]} before, desktop"></a></figure>
+            <figure><figcaption>After · 1440×1000</figcaption><a href="screenshots/chaotic-pop-after/${id}-desktop.png"><img loading="lazy" src="screenshots/chaotic-pop-after/${id}-desktop.png" alt="${names[index]} after, desktop"></a></figure>
+            <figure><figcaption>Before · 390×844</figcaption><a href="screenshots/chaotic-pop-before/${id}-mobile.png"><img loading="lazy" src="screenshots/chaotic-pop-before/${id}-mobile.png" alt="${names[index]} before, mobile portrait"></a></figure>
+            <figure><figcaption>After · 390×844</figcaption><a href="screenshots/chaotic-pop-after/${id}-mobile.png"><img loading="lazy" src="screenshots/chaotic-pop-after/${id}-mobile.png" alt="${names[index]} after, mobile portrait"></a></figure>
+          </div>`;
+          main.append(section);
+        }
+      </script>
+    </main>
+
+    <section class="comparison">
+      <h2>Menu, camera and team references</h2>
+      <div class="extras">
+        <figure>
+          <figcaption>Existing baseline menu reference (1440×1000)</figcaption>
+          <a href="screenshots/chaotic-pop-before/main-menu-desktop-reference.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-before/main-menu-desktop-reference.png"
+              alt="Earlier real menu capture before the pop pass"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>After menu · 1440×1000</figcaption>
+          <a href="screenshots/chaotic-pop-after/main-menu-desktop.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/main-menu-desktop.png"
+              alt="Chaotic Pop menu capture"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>After menu · 1440×900</figcaption>
+          <a href="screenshots/chaotic-pop-after/main-menu-1440x900.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/main-menu-1440x900.png"
+              alt="Chaotic Pop menu at 1440 by 900"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Little Sun · 1920×1080 gameplay</figcaption>
+          <a href="screenshots/chaotic-pop-after/desktop-1920x1080-gameplay.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/desktop-1920x1080-gameplay.png"
+              alt="Little Sun gameplay at 1920 by 1080"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Little Sun · High graphics, 1920×1080</figcaption>
+          <a href="screenshots/chaotic-pop-after/little-sun-desktop-1920x1080-high.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/little-sun-desktop-1920x1080-high.png"
+              alt="Little Sun gameplay on the High graphics profile"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Little Sun · 360×640 portrait</figcaption>
+          <a href="screenshots/chaotic-pop-after/small-portrait.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/small-portrait.png"
+              alt="Little Sun on a compact portrait viewport"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Little Sun · 844×390 landscape</figcaption>
+          <a href="screenshots/chaotic-pop-after/mobile-landscape.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/mobile-landscape.png"
+              alt="Little Sun on a landscape mobile viewport"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>After chef follow view · mobile</figcaption>
+          <a href="screenshots/chaotic-pop-after/little-sun-mobile-follow.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/little-sun-mobile-follow.png"
+              alt="Little Sun follow camera on mobile"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Little Sun · chef close-up</figcaption>
+          <a href="screenshots/chaotic-pop-after/little-sun-desktop-closeup.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/little-sun-desktop-closeup.png"
+              alt="Close view of the chef and kitchen"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Solo · server-confirmed victory</figcaption>
+          <a href="screenshots/chaotic-pop-after/victory-desktop.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/victory-desktop.png"
+              alt="Actual solo match victory screen"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Solo · natural timer defeat</figcaption>
+          <a href="screenshots/chaotic-pop-after/defeat-desktop.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/defeat-desktop.png"
+              alt="Defeat after the server match clock expires"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>After four-player room · 844×390</figcaption>
+          <a href="screenshots/chaotic-pop-after/four-player-landscape.png"
+            ><img
+              loading="lazy"
+              src="screenshots/chaotic-pop-after/four-player-landscape.png"
+              alt="Four clients in one shared kitchen"
+          /></a>
+        </figure>
+      </div>
+    </section>
+  </body>
+</html>

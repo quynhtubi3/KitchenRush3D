@@ -13,6 +13,12 @@ import {
   type ArtTools,
 } from '../apps/client/src/game/restaurant-art';
 import { floorPixels } from '../apps/client/src/game/floor-texture';
+import {
+  popCore,
+  popSemantic,
+  restaurantPopThemes,
+  restaurantPopTheme,
+} from '../apps/client/src/game/chaotic-pop-theme';
 import { items, dishRecipe, levels, restaurants } from '../packages/content/src/campaign';
 import {
   roundedBoxSegments,
@@ -82,7 +88,39 @@ function harness() {
   };
 }
 
+function luminance(hex: string) {
+  const channels = hex.match(/[a-f\d]{2}/gi)!.map((value) => parseInt(value, 16) / 255);
+  const linear = channels.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+  );
+  return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+}
+function contrast(a: string, b: string) {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
 describe('procedural art geometry', () => {
+  it('defines five distinct, shared pop identities with a readable ink-on-paper pairing', () => {
+    const ids = ['little-sun', 'tide', 'olive', 'lantern', 'orbit'] as const;
+    const themes = ids.map((id) => restaurantPopTheme(id));
+    expect(Object.keys(restaurantPopThemes)).toEqual(ids);
+    for (const key of ['cabinet', 'wood', 'accent', 'secondary', 'floor', 'wall', 'room'] as const)
+      expect(new Set(themes.map((theme) => theme[key])).size).toBe(5);
+    for (const theme of themes) expect(contrast(popCore.ink, theme.accent)).toBeGreaterThan(4.5);
+    expect(contrast(popCore.ink, popCore.paper)).toBeGreaterThan(7);
+    expect(popCore.ink).toBe('#25243A');
+    expect(popCore.paper).toBe('#FFF9E9');
+    expect(popSemantic).toEqual({
+      background: popCore.ink,
+      surface: popCore.paper,
+      accent: popCore.mustard,
+      danger: '#D84235',
+      success: '#19734F',
+      warning: '#B66A00',
+    });
+    expect(restaurantPopTheme('unknown')).toBe(restaurantPopTheme('little-sun'));
+  });
   it('budgets tessellation for the isometric camera scale', () => {
     expect(roundedBoxSegments(0.96, 0.69, 0.92, 0.085)).toBe(2);
     expect(roundedBoxSegments(0.28, 0.28, 0.28, 0.09)).toBe(4);
@@ -98,9 +136,11 @@ describe('procedural art geometry', () => {
     expect(cabinet.indices!.length / 3).toBeLessThan(432 * 0.2);
   });
   it('generates deterministic, distinct tiled floor textures for each cuisine', () => {
-    const outputs = ['tide', 'olive', 'lantern', 'orbit'].map((id) => floorPixels(id, 64));
+    const outputs = ['little-sun', 'tide', 'olive', 'lantern', 'orbit'].map((id) =>
+      floorPixels(id, 64),
+    );
     expect(outputs.every((p) => p.length === 64 * 64 * 4 && p.every(Number.isFinite))).toBe(true);
-    expect(JSON.stringify(Array.from(outputs[0]))).toBe(
+    expect(JSON.stringify(Array.from(outputs[1]))).toBe(
       JSON.stringify(Array.from(floorPixels('tide', 64))),
     );
     const signatures = outputs.map((p) => {
@@ -118,7 +158,7 @@ describe('procedural art geometry', () => {
         Math.round(b / (p.length / 4)),
       ].join(',');
     });
-    expect(new Set(signatures).size).toBe(4);
+    expect(new Set(signatures).size).toBe(5);
   });
   it('keeps cached geometry unchanged after repeated translated merges', () => {
     const h = harness();
@@ -176,7 +216,11 @@ describe('procedural art geometry', () => {
     try {
       const root = new TransformNode('ingredients', h.scene);
       const ingredients = [...items.keys()].filter(
-        (k) => /^(tide|olive|lantern|orbit)-/.test(k) && !dishRecipe(k),
+        (k) =>
+          /^(tide|olive|lantern|orbit)-/.test(k) &&
+          !dishRecipe(k) &&
+          !k.endsWith('-side-cooked') &&
+          ['raw', 'hot', 'green', 'cut', 'side', 'crisp'].includes(k.split('-')[1]),
       );
       expect(ingredients).toHaveLength(28);
       for (const kind of ingredients) {
@@ -190,6 +234,18 @@ describe('procedural art geometry', () => {
           );
           expect(mesh.getTotalVertices()).toBeGreaterThan(0);
         }
+      }
+      const newInputs = [...items.keys()].filter(
+        (kind) =>
+          /^(tide|olive|lantern|orbit)-(signature|late|side)-/.test(kind) &&
+          !kind.endsWith('-side-prepared') &&
+          !dishRecipe(kind),
+      );
+      expect(newInputs.length).toBeGreaterThan(20);
+      for (const kind of newInputs) {
+        expect(items.get(kind)?.name.vi.length).toBeGreaterThan(0);
+        expect(items.get(kind)?.name.en.length).toBeGreaterThan(0);
+        expect(cuisineFood(h.a, root, kind)).toBe(false);
       }
       expect(cuisineFood(h.a, root, 'missing')).toBe(false);
     } finally {

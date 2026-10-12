@@ -1,0 +1,34 @@
+{
+  "css": [390, 608],
+  "buffer": [780, 1216],
+  "dpr": 3,
+  "hardwareScalingLevel": 0.5,
+  "effectiveScale": 2,
+  "profile": "balanced",
+  "sharpness": "auto",
+  "fps": 2.939627399479738,
+  "targetFps": 30,
+  "shadowMapSize": 512,
+  "shadowMode": "poisson",
+  "renderedFrames": 39,
+  "shadowRenderedFrames": 33,
+  "faces": ["neutral:false", "neutral:false"],
+  "characterArtVersion": "chef-procedural-v1",
+  "sceneBuildMs": 313.19999980926514,
+  "sceneReadyMs": 3333.5,
+  "characterSlots": [
+    ["hat", "hair", "apron"],
+    ["hat", "hair", "apron"]
+  ],
+  "characterBindingsValid": true,
+  "frameMs": 584.5999999046326,
+  "frameMean": 340.1791669845581,
+  "frameP95": 945.4000244140625,
+  "frameP99": 1026.199951171875,
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "zoom": 1.82
+}

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Kitchen Rush — Chaotic Pop Pass 2 evidence</title>
+    <style>
+      body {
+        margin: auto;
+        max-width: 1400px;
+        padding: 24px;
+        background: #25243a;
+        color: #fff9e9;
+        font:
+          16px/1.55 system-ui,
+          sans-serif;
+      }
+      a {
+        color: #ffc72c;
+      }
+      button,
+      select {
+        font: inherit;
+        padding: 8px 12px;
+        margin: 8px 8px 8px 0;
+      }
+      label {
+        display: inline-block;
+        margin-right: 16px;
+      }
+      .pair {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1440/1000;
+        background: #1a192b;
+        overflow: hidden;
+      }
+      .pair.mobile {
+        aspect-ratio: 390/844;
+        max-width: 460px;
+        margin: auto;
+      }
+      .pair img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      #after {
+        clip-path: inset(0 0 0 50%);
+      }
+      input {
+        width: 100%;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .gallery img {
+        width: 100%;
+        display: block;
+        background: #e8e7f0;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        padding: 8px 0;
+        color: #d8d4e4;
+      }
+      .study {
+        display: block;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chaotic Pop Pass 2</h1>
+    <p>
+      Real production-browser kitchen screenshots. Left: fresh Pass 1 baseline; right: Pass 2.
+      Balanced, Reduced Motion, same first restaurant level/viewport/camera. Chromium SwiftShader is
+      not iPhone/Safari evidence or a mobile GPU benchmark.
+    </p>
+    <label
+      >Restaurant
+      <select id="restaurant">
+        <option value="little-sun">Little Sun</option>
+        <option value="tide">Tide</option>
+        <option value="olive">Olive</option>
+        <option value="lantern">Lantern</option>
+        <option value="orbit">Orbit</option>
+      </select></label
+    >
+    <label
+      >Camera
+      <select id="view">
+        <option value="desktop">Desktop overview 1440×1000</option>
+        <option value="mobile">Mobile overview 390×844</option>
+        <option value="mobile-follow">Mobile follow 390×844</option>
+      </select></label
+    >
+    <div class="pair" id="pair">
+      <img id="before" alt="Before: live kitchen" /><img id="after" alt="After: live kitchen" />
+    </div>
+    <label style="display: block"
+      >Reveal after <input id="reveal" type="range" min="0" max="100" value="50"
+    /></label>
+    <p>
+      <a id="beforeLink">Open before at full size</a> ·
+      <a id="afterLink">Open after at full size</a>
+    </p>
+    <h2>Floor crops from real gameplay</h2>
+    <div class="gallery" id="floors"></div>
+    <h2>Actual runtime asset studies — offline, not gameplay proof</h2>
+    <p>
+      These inspection sheets use the same chef/customer/food functions as the live game. They do
+      not invent server snapshots or establish a cooking/multiplayer victory. A controlled matching
+      pre-change face/equipment/25-dish study was not captured.
+    </p>
+    <a href="screenshots/chaotic-pop-pass2-after/faces-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass2-after/faces-asset-study.png"
+        alt="Eight actual 3D chef expressions"
+    /></a>
+    <a href="screenshots/chaotic-pop-pass2-after/customers-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass2-after/customers-asset-study.png"
+        alt="Four actual 3D customers"
+    /></a>
+    <a href="screenshots/chaotic-pop-pass2-after/food-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass2-after/food-asset-study.png"
+        alt="Twenty-five recipe outputs rendered as 3D assets"
+    /></a>
+    <h2>Gameplay and mobile evidence</h2>
+    <div class="gallery" id="gameplay"></div>
+    <p>
+      <a href="CHAOTIC_POP_PASS2_IMPLEMENTATION.md">Tests, render cost and iPhone check</a> ·
+      <a href="CHAOTIC_POP_PASS2_VISUAL_AUDIT.md">Internal quality assessment and missing work</a> ·
+      <a href="CHAOTIC_POP_PASS2_PHASE2_HANDOFF.md">Character handoff</a>
+    </p>
+    <script>
+      const venues = ['little-sun', 'tide', 'olive', 'lantern', 'orbit'];
+      const directory = 'screenshots/chaotic-pop-pass2-after/';
+      function update() {
+        const id = document.querySelector('#restaurant').value,
+          v = document.querySelector('#view').value;
+        for (const phase of ['before', 'after']) {
+          const src = `screenshots/chaotic-pop-pass2-${phase}/${id}-${v}.png`;
+          document.querySelector(`#${phase}`).src = src;
+          document.querySelector(`#${phase}Link`).href = src;
+        }
+        document.querySelector('#pair').classList.toggle('mobile', v !== 'desktop');
+      }
+      document.querySelectorAll('select').forEach((el) => el.addEventListener('change', update));
+      document
+        .querySelector('#reveal')
+        .addEventListener(
+          'input',
+          (event) =>
+            (document.querySelector('#after').style.clipPath =
+              `inset(0 0 0 ${event.target.value}%)`),
+        );
+      function figure(container, file, label) {
+        const f = document.createElement('figure'),
+          a = document.createElement('a'),
+          img = document.createElement('img'),
+          caption = document.createElement('figcaption');
+        a.href = directory + file;
+        img.src = a.href;
+        img.alt = label;
+        img.loading = 'lazy';
+        caption.textContent = label;
+        a.append(img);
+        f.append(a, caption);
+        document.querySelector(container).append(f);
+      }
+      venues.forEach((id) =>
+        figure('#floors', `${id}-floor-closeup.png`, `${id}: desktop gameplay crop`),
+      );
+      for (const [file, label] of [
+        ['main-menu-1440x900.png', 'Main menu'],
+        ['small-portrait.png', '360×640 overview'],
+        ['mobile-landscape-follow.png', '844×390 follow'],
+        [
+          'mobile-retina-balanced.png',
+          '390×844 DPR 3, Balanced buffer scale 2; grounded table feet',
+        ],
+        ['little-sun-desktop-1920x1080-high.png', '1920×1080 High'],
+        ['held-burger-desktop.png', 'Server-confirmed carried burger'],
+        ['cooking-desktop.png', 'Cooking from real inputs'],
+        ['four-player-landscape.png', 'One browser + three connected Colyseus peers'],
+        ['victory-desktop.png', 'Real Solo victory'],
+        ['defeat-desktop.png', 'Natural server-timed defeat'],
+        ['cooking-frame-0.png', 'Mobile cooking frame 0'],
+        ['cooking-frame-1.png', 'Mobile cooking frame 1'],
+        ['cooking-frame-2.png', 'Mobile cooking frame 2'],
+      ])
+        figure('#gameplay', file, label);
+      update();
+    </script>
+  </body>
+</html>

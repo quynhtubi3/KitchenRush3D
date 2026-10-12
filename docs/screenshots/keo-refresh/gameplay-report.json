@@ -1,0 +1,18 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "errors": [],
+    "render": "{\"meshes\":269,\"activeMeshes\":215,\"drawCalls\":332,\"drawCallsMean\":277.27906976744185,\"materials\":143,\"uniqueGeometries\":269,\"fps\":2,\"triangles\":120772.66666666667,\"geometryBytesEstimated\":3938456,\"textureBytesEstimated\":10808204,\"shadowCasters\":107,\"quality\":\"standard\"}"
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [],
+    "render": "{\"meshes\":269,\"activeMeshes\":215,\"drawCalls\":331,\"drawCallsMean\":206.87272727272727,\"materials\":143,\"uniqueGeometries\":269,\"fps\":5,\"triangles\":120772.66666666667,\"geometryBytesEstimated\":3938456,\"textureBytesEstimated\":8280481,\"shadowCasters\":107,\"quality\":\"standard\"}"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "renderer": "Chromium SwiftShader (not a device benchmark)",
+  "viewport": {
+    "name": "desktop",
+    "width": 1440,
+    "height": 1000
+  },
+  "meshes": 251,
+  "activeMeshes": 197,
+  "drawCalls": 309,
+  "drawCallsMean": 239.56410256410257,
+  "materials": 134,
+  "uniqueGeometries": 251,
+  "fps": 3,
+  "triangles": 103576,
+  "geometryBytesEstimated": 3420672,
+  "textureBytesEstimated": 10089109,
+  "shadowCasters": 112,
+  "quality": "standard"
+}

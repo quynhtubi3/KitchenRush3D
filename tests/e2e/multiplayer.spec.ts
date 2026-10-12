@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { Client, type Room } from '../../apps/server/tests/network-client';
 async function station(page: Page, id: string, holding: string) {
   await page.locator(`[data-station="${id}"]`).click();
   await expect(page.locator('#hand')).toHaveText(holding);
@@ -121,3 +122,85 @@ test('two real browsers coordinate one dish, washing and social signals in the s
     await guestContext.close();
   }
 });
+
+for (const recovery of ['dropped', 'reload'] as const) {
+  test(`Home cancels ${recovery} reconnect and releases the late room`, async ({
+    page,
+    baseURL,
+  }) => {
+    let peer: Room | undefined;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let pending = false;
+    try {
+      await page.addInitScript(() =>
+        localStorage.setItem(
+          'kr-preferences-v1',
+          JSON.stringify({ quality: 'low', reducedMotion: true }),
+        ),
+      );
+      // Keep native sockets: Playwright's WS proxy rejects the SDK's optional
+      // protocols argument. Only expose transport closure, never game state.
+      await page.addInitScript(() => {
+        const NativeSocket = window.WebSocket;
+        const sockets: WebSocket[] = [];
+        Object.assign(window, {
+          WebSocket: class extends NativeSocket {
+            constructor(...args: ConstructorParameters<typeof WebSocket>) {
+              super(...args);
+              sockets.push(this);
+            }
+          },
+          disconnectTestSockets: () => sockets.forEach((socket) => socket.close(4001)),
+        });
+      });
+      await page.goto('/');
+      await page.locator('[data-action="multiplayer"]').click();
+      await page.locator('[data-action="create-private"]').click();
+      const roomId = await page.locator('.room-code strong').innerText();
+      const token = await page.evaluate(() => sessionStorage.getItem('kr-reconnect'));
+      const endpoint =
+        process.env.E2E_PRODUCTION === 'true' || process.env.E2E_BASE_URL
+          ? baseURL!
+          : 'http://127.0.0.1:2567';
+      peer = await new Client(endpoint).joinById(roomId);
+      peer.reconnection.enabled = false;
+      peer.onMessage('notice', () => {});
+      await expect(page.locator('.lobby-member')).toHaveCount(2);
+      await page.route(
+        '**/matchmake/reconnect/**',
+        async (route) => {
+          const response = await route.fetch();
+          expect(response.ok()).toBe(true);
+          pending = true;
+          await gate;
+          await route.fulfill({ response });
+        },
+        { times: 1 },
+      );
+      // Force a real server-side drop, leaving the peer as an independent observer.
+      await page.evaluate(() =>
+        (window as unknown as { disconnectTestSockets(): void }).disconnectTestSockets(),
+      );
+      if (recovery === 'reload') await page.reload();
+      await expect.poll(() => pending).toBe(true);
+      await page.locator('.dialog [data-action="home"]').click();
+      await expect(page.locator('body')).toHaveAttribute('data-screen', 'menu');
+      release();
+      await expect
+        .poll(() => {
+          const snapshot = JSON.parse(peer!.state.snapshot);
+          return snapshot.session.members.length;
+        })
+        .toBe(1);
+      expect(await page.evaluate(() => sessionStorage.getItem('kr-reconnect'))).toBeNull();
+      await expect(page.locator('body')).toHaveAttribute('data-screen', 'menu');
+      expect(token?.startsWith(`${roomId}:`)).toBe(true);
+    } finally {
+      release();
+      if (peer?.connection.isOpen) await peer.leave();
+    }
+  });
+}

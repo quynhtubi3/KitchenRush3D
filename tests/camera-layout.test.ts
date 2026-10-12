@@ -4,6 +4,9 @@ import { cameraFrame, cameraProfile, cameraTarget } from '../apps/client/src/gam
 describe('responsive orthographic camera framing', () => {
   it.each([
     [1920, 1080, false, 'desktop-overview'],
+    [1920, 1080, true, 'desktop-overview'],
+    [1024, 768, true, 'desktop-overview'],
+    [1280, 600, true, 'mobile-landscape'],
     [390, 844, true, 'mobile-portrait'],
     [844, 390, true, 'mobile-landscape'],
     [360, 640, true, 'mobile-portrait'],

@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Client, type Room } from '../../apps/server/tests/network-client';
 
 for (const viewport of [
@@ -81,18 +83,37 @@ test('four network clients share a kitchen and mobile roster', async ({ browser,
     }
     await expect(page.locator('.lobby-member')).toHaveCount(4);
     for (const peer of peers) peer.send('intent', { type: 'ready', ready: true });
+    await expect
+      .poll(
+        async () =>
+          (await page.locator('.lobby-member b').allTextContents()).filter(
+            (text) => text === 'Sẵn sàng',
+          ).length,
+      )
+      .toBe(3);
+    const lobbyPanel = page.locator('.lobby-panel');
+    await lobbyPanel.evaluate((element) => (element.scrollTop = element.scrollHeight));
+    await expect.poll(() => lobbyPanel.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
     await page.locator('[data-action="ready"]').click();
+    const host = page.locator('.lobby-member').filter({ hasText: '(Bạn)' });
+    await expect(host.locator('b')).toHaveText('Sẵn sàng');
+    await expect(page.locator('[data-action="start-team"]')).toBeEnabled();
     await page.locator('[data-action="start-team"]').click();
     await expect(page.locator('.teammate')).toHaveCount(4);
     await expect(page.locator('#overlay .veil')).toHaveCount(0, { timeout: 10000 });
-    await page.screenshot({ path: 'docs/screenshots/pass6/four-player-landscape.png' });
+    if (process.env.CHAOTIC_POP_CAPTURE_DIR) {
+      mkdirSync(process.env.CHAOTIC_POP_CAPTURE_DIR, { recursive: true });
+      await page.screenshot({
+        path: resolve(process.env.CHAOTIC_POP_CAPTURE_DIR, 'four-player-landscape.png'),
+      });
+    } else await page.screenshot({ path: 'docs/screenshots/pass6/four-player-landscape.png' });
     for (const peer of peers) peer.send('intent', { type: 'interact', station: 'rack' });
     await expect
       .poll(() => {
         const state = JSON.parse(peers[0].state.snapshot);
         return Object.values(state.chefs).filter((chef: any) => chef.item?.kind === 'plate').length;
       })
-      .toBe(2);
+      .toBe(3);
     await expect(page.locator('.team-roster')).toContainText('Đĩa');
   } finally {
     for (const peer of peers) {

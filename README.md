@@ -1,6 +1,6 @@
 # Kitchen Rush 3D
 
-Game nấu ăn 3D bằng TypeScript, Babylon.js, Vite và Colyseus. **Bản 0.4 ưu tiên Guest:** campaign 5 nhà hàng/50 màn, Solo/co-op 2–4 người, Settings và điều khiển cảm ứng. Mô phỏng gameplay chạy trên Node.js; trình duyệt chỉ gửi ý định di chuyển/tương tác. Account/Database/Economy/Social tạm hoãn, giữ lại mã đã xây dựng. Trạng thái kiểm chứng nằm ở [PROGRESS.md](docs/PROGRESS.md).
+Game nấu ăn 3D bằng TypeScript, Babylon.js, Vite và Colyseus. **Bản 0.4 ưu tiên Guest:** campaign 5 nhà hàng/50 màn, Solo/co-op 2–4 người, Settings và điều khiển cảm ứng. Mô phỏng gameplay chạy trên Node.js; trình duyệt chỉ gửi ý định di chuyển/tương tác. Account & cloud-save foundation hiện là tùy chọn; Guest vẫn là mặc định. Economy/shop/social không thuộc phạm vi hiện tại. Trạng thái kiểm chứng nằm ở [PROGRESS.md](docs/PROGRESS.md).
 
 ![Hai đầu bếp chơi cùng một trận](docs/screenshots/multiplayer-gameplay.png)
 
@@ -17,11 +17,13 @@ npm run dev
 
 Trên Windows PowerShell nếu ExecutionPolicy chặn `npm.ps1`, dùng `npm.cmd` và `npx.cmd` thay cho `npm`/`npx`.
 
-Mở **http://localhost:5173**. Server ở http://localhost:2567; health check: `/health`. Solo và co-op đều cần server local. Hiện ưu tiên Guest, tạm hoãn Account/Economy/Social. Không có `DATABASE_URL` thì game chạy Guest lưu cục bộ. Để chủ động bật Guest kể cả khi môi trường có DB URL: PowerShell `$env:GUEST_ONLY='true'; npm.cmd run dev`. Account và tiến trình đồng bộ vẫn chưa nghiệm thu PostgreSQL.
+Mở **http://localhost:5173**. Server ở http://localhost:2567; health check: `/health`. Solo và co-op đều cần server local. Không cần `DATABASE_URL` để chơi Guest cục bộ. Để bật Auth/Cloud Save, cần database đã migrate/seed và các cờ `GUEST_ONLY=false`, `AUTH_ENABLED=true`, `CLOUD_SAVE_ENABLED=true`. Production signup cần bật email xác minh/khôi phục, SMTP hợp lệ, HTTPS origin và cờ launcher riêng; mặc định vẫn tắt. Hướng dẫn và giới hạn rollout nằm ở [ACCOUNT_FOUNDATION.md](docs/ACCOUNT_FOUNDATION.md), [DEPLOYMENT.md](docs/DEPLOYMENT.md) và hướng dẫn host PostgreSQL trên Windows tại [LOCAL_ACCOUNT_HOSTING.md](docs/LOCAL_ACCOUNT_HOSTING.md).
 
-Nút **Cài đặt** mở Master/Music/SFX Volume, Mute, đồ họa nhẹ và giảm chuyển động. Cài đặt lưu trên thiết bị; mở bảng không dừng trận. Bật âm thanh để nghe nhạc tổng hợp riêng của menu/5 nhà hàng; âm thanh không tự phát trước tương tác. Chế độ nhẹ tắt bóng đổ, giảm độ phân giải render; lựa chọn này không đổi độ khó hoặc trạng thái server.
+Nút **Cài đặt** mở Master/Music/SFX Volume, Mute, Graphics Quality, độ nét và giảm chuyển động. Cài đặt lưu trên thiết bị; mở bảng không dừng trận. Bật âm thanh để nghe loop nhạc riêng cho menu và từng nhà hàng; âm thanh không tự phát trước tương tác. Nếu trình duyệt không giải mã được nhạc OGG, game dùng nhạc tổng hợp dự phòng. Low giảm hiệu ứng và tắt shadow map nhưng giữ contact shadow; độ nét Retina được chọn riêng. Mobile Balanced nhắm 30 FPS, Low 24, High 60; chưa xác nhận nhiệt độ trên iPhone thật. Lựa chọn này không đổi độ khó hoặc trạng thái server. Xem [bản nâng cấp âm thanh](docs/AUDIO_REFRESH_2026-10-12.md), [Pass 3 world polish](docs/CHAOTIC_POP_PASS3_IMPLEMENTATION.md) và [ảnh so sánh](docs/CHAOTIC_POP_PASS3_COMPARISON.html).
 
 Trên điện thoại, chọn **Cài đặt → Điều khiển cảm ứng → Joystick + nút tương tác**. Kéo cần theo tám hướng; thả tay để dừng tại tâm ô đang tới. Nút bên phải hiện trạm gần nhất và gửi một thao tác mỗi lần nhấn; viền trạm cho biết mục tiêu. Có thể tiếp tục chạm trạm hoặc đổi về **Chạm để di chuyển**. Dọc/ngang có vùng điều khiển riêng và safe-area. Lệnh vẫn đi qua đường đi theo ô của server, không đổi tốc độ hoặc cân bằng.
+
+Trong ca chơi trên điện thoại, chạm **Đơn** để mở vé khách rồi chọn khách cần theo dõi; vé tự thu gọn sau khi chọn. Nút chuyển sang màu cảnh báo khi có khách sắp rời, để danh sách không che bếp trong lúc thao tác.
 
 Vé khách/hàng chờ có cảnh báo **Sắp bỏ đi**; trạm hiện **Sắp cháy** hoặc trạng thái hoàn tất. Cảnh báo dựa trên snapshot và thời gian của từng màn. Chữ/màu vẫn hoạt động khi mute hoặc giảm chuyển động; SFX dùng âm lượng đã chọn.
 
@@ -45,7 +47,7 @@ Mất kết nối có **20 giây** để quay lại, giữ nguyên đầu bếp 
 
 ## Campaign
 
-Chọn màn trong menu: Nắng Mai → Thủy Triều → Vườn Ôliu → Đèn Lồng → Quỹ Đạo, mỗi nhà hàng 10 ca. Màn khóa vẫn hiển thị. Thắng nhận 1–3 sao và mở màn kế tiếp; chơi lại không làm mất sao tốt nhất. Màn 5 giới thiệu công thức đặc biệt có nhánh trộn → nướng. Xem sổ công thức và tên món trên vé khách; ghép đúng món trước khi phục vụ.
+Chọn màn trong menu: Nắng Mai → Thủy Triều → Vườn Ôliu → Đèn Lồng → Quỹ Đạo, mỗi nhà hàng 10 ca. Màn khóa vẫn hiển thị. Thắng nhận 1–3 sao và mở màn kế tiếp; chơi lại không làm mất sao tốt nhất. Little Sun mở Burger ở màn 1, Cheeseburger màn 2, Burger Gà Giòn màn 3, Burger Nướng màn 5 và Khoai Tây Chiên ở màn 10. Các nhà hàng khác lần lượt mở món đặc trưng ở màn 2, nhánh chế biến mới ở màn 3, công thức đặc biệt ở màn 5 và món cuối ở màn 10. Vé khách hiển thị món được server chọn; khay bày món gắn với đúng đơn khi bắt đầu lắp ráp.
 
 Tutorial theo ngữ cảnh ở các ca đầu có nút ẩn, không tạm dừng co-op. Public matchmaking ghép cùng màn và cỡ đội. Tiến trình cục bộ chưa chống sửa localStorage; server vẫn quyết định mọi kết quả trận. Xem [thiết kế campaign](docs/CAMPAIGN.md).
 
@@ -90,7 +92,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-`DATABASE_URL` nhận qua biến môi trường; giá trị mặc định chỉ dùng local cho migration/seed. Migration SQL có phiên bản, transaction và advisory lock. Migration 002 thêm account, session, guest identity, tiến trình và liên kết match; khi server có `DATABASE_URL`, kết quả do simulation tạo được lưu theo từng người chơi. Nếu chưa cấu hình database, game giữ chế độ Guest cục bộ. PostgreSQL/Docker chưa được chạy kiểm chứng trong lần triển khai hiện tại; xem [PROGRESS.md](docs/PROGRESS.md).
+`DATABASE_URL` nhận qua biến môi trường; giá trị mặc định chỉ dùng local cho migration/seed. Migration SQL có phiên bản, transaction và advisory lock. Migrations bổ sung email/session identity, Guest links, hồ sơ và progress theo nhà hàng/màn. Chỉ khi `CLOUD_SAVE_ENABLED=true`, kết quả simulation do server tạo mới được lưu theo từng người chơi; có database URL thôi không tự bật account hoặc persistence. PostgreSQL/Docker và kết quả kiểm thử được ghi chính xác ở [PROGRESS.md](docs/PROGRESS.md).
 
 ## Cấu trúc
 
@@ -108,4 +110,4 @@ npm run db:seed
 
 Chi tiết: [Kiến trúc](docs/ARCHITECTURE.md), [Gameplay](docs/GAME_DESIGN.md), [Content](docs/CONTENT_SCHEMA.md), [Assets](docs/ASSET_MANIFEST.md), [Test](docs/TEST_PLAN.md), [Triển khai](docs/DEPLOYMENT.md), [Tiến độ](docs/PROGRESS.md).
 
-Nhánh Guest tiếp tục với gameplay feedback, hiệu ứng, animation và tối ưu mobile. Account/Database/Economy/Social đã được tạm hoãn theo yêu cầu; mã database-backed chưa nghiệm thu và không cần cho Guest. Docker/PostgreSQL chưa được chạy kiểm chứng trên máy hiện tại.
+Guest vẫn hoạt động độc lập và là cấu hình mặc định. Account foundation có thể bật riêng; production signup hiện có xác minh email và đặt lại mật khẩu, nhưng vẫn yêu cầu người vận hành cấu hình SMTP, HTTPS origin ổn định và chủ động bật launcher. Gmail setup cùng giới hạn kiểm chứng hiện tại nằm ở [Local Account Hosting](docs/LOCAL_ACCOUNT_HOSTING.md). Economy/shop/social vẫn ngoài phạm vi. Xem [Account Foundation](docs/ACCOUNT_FOUNDATION.md), [Database Schema](docs/DATABASE_SCHEMA.md) và [Guest Migration](docs/GUEST_MIGRATION.md).

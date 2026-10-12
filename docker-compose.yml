@@ -26,6 +26,10 @@ services:
       PORT: 2567
       NODE_ENV: production
       GUEST_ONLY: ${GUEST_ONLY:-true}
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
+      CLOUD_SAVE_ENABLED: ${CLOUD_SAVE_ENABLED:-false}
+      ACCOUNT_ALLOWED_ORIGINS: ${ACCOUNT_ALLOWED_ORIGINS:-}
       DATABASE_URL: postgres://kitchen:${POSTGRES_PASSWORD:-kitchen_local}@database:5432/kitchen
     depends_on:
       migrate: { condition: service_completed_successfully }

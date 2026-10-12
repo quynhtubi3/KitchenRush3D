@@ -1,0 +1,16 @@
+{
+  "viewport": { "name": "desktop-1920", "width": 1920, "height": 1080 },
+  "renderer": "Chromium SwiftShader, touch profile; not native hardware",
+  "meshes": 236,
+  "activeMeshes": 182,
+  "drawCalls": 284,
+  "drawCallsMean": 219.19444444444446,
+  "materials": 159,
+  "uniqueGeometries": 236,
+  "fps": 2,
+  "triangles": 94054,
+  "geometryBytesEstimated": 3108680,
+  "textureBytesEstimated": 7670339,
+  "shadowCasters": 102,
+  "quality": "standard"
+}

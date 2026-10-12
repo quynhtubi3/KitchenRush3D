@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 async function station(page: Page, id: string, holding?: string) {
   await page.locator(`[data-station="${id}"]`).click();
   if (holding) await expect(page.locator('#hand')).toHaveText(holding);
@@ -9,6 +11,10 @@ async function burger(page: Page) {
   await station(page, 'assembly', 'Tay trống');
   await station(page, 'meat', 'Thịt');
   await station(page, 'stove', 'Tay trống');
+  if (process.env.CHAOTIC_POP_CAPTURE_DIR)
+    await page.screenshot({
+      path: resolve(process.env.CHAOTIC_POP_CAPTURE_DIR, 'cooking-desktop.png'),
+    });
   await station(page, 'lettuce', 'Rau xà lách');
   await station(page, 'board', 'Tay trống');
   for (let i = 1; i <= 3; i++) {
@@ -25,6 +31,10 @@ async function burger(page: Page) {
   await station(page, 'bun', 'Bánh mì');
   await station(page, 'assembly', 'Tay trống');
   await station(page, 'assembly', 'Burger Nắng Mai');
+  if (process.env.CHAOTIC_POP_CAPTURE_DIR)
+    await page.screenshot({
+      path: resolve(process.env.CHAOTIC_POP_CAPTURE_DIR, 'held-burger-desktop.png'),
+    });
 }
 test('real browser: cook, serve, wash, reuse, win, persist result', async ({ page }) => {
   // Standard PBR graphics plus multiple SwiftShader screenshots and the final reload.
@@ -41,6 +51,12 @@ test('real browser: cook, serve, wash, reuse, win, persist result', async ({ pag
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Vào bếp' })).toBeVisible();
   await page.screenshot({ path: 'test-results/menu-desktop.png' });
+  if (process.env.CHAOTIC_POP_CAPTURE_DIR) {
+    mkdirSync(process.env.CHAOTIC_POP_CAPTURE_DIR, { recursive: true });
+    await page.screenshot({
+      path: resolve(process.env.CHAOTIC_POP_CAPTURE_DIR, 'main-menu-desktop.png'),
+    });
+  }
   await page.getByRole('button', { name: 'Vào bếp' }).click();
   await expect(page.locator('.hud')).toBeVisible();
   // Keep labels stationary during this long-form production regression.
@@ -64,6 +80,10 @@ test('real browser: cook, serve, wash, reuse, win, persist result', async ({ pag
   await expect(page.locator('.results')).toContainText('Một ca làm rực rỡ');
   await expect(page.locator('.results')).toContainText('Đã lưu kết quả');
   await page.screenshot({ path: 'test-results/result-desktop.png' });
+  if (process.env.CHAOTIC_POP_CAPTURE_DIR)
+    await page.screenshot({
+      path: resolve(process.env.CHAOTIC_POP_CAPTURE_DIR, 'victory-desktop.png'),
+    });
   await page.getByRole('button', { name: 'Về thực đơn' }).click();
   await expect(page.locator('.best')).toBeVisible();
   await expect(page.locator('#campaign-level option[value="little-sun-02"]')).not.toHaveAttribute(

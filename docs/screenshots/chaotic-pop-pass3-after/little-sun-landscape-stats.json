@@ -1,0 +1,51 @@
+{
+  "viewport": { "name": "landscape", "width": 844, "height": 390 },
+  "renderer": "Chromium SwiftShader, touch profile; not native hardware",
+  "meshes": 265,
+  "activeMeshes": 211,
+  "drawCalls": 331,
+  "drawCallsMean": 271.5982142857143,
+  "materials": 131,
+  "uniqueGeometries": 265,
+  "fps": 2,
+  "triangles": 114492,
+  "geometryBytesEstimated": 3758096,
+  "textureBytesEstimated": 7561386,
+  "shadowCasters": 121,
+  "quality": "standard",
+  "resolution": {
+    "css": [844, 296],
+    "buffer": [844, 296],
+    "dpr": 1,
+    "hardwareScalingLevel": 1,
+    "effectiveScale": 1,
+    "profile": "balanced",
+    "sharpness": "auto",
+    "fps": 2.392678406689861,
+    "targetFps": 30,
+    "shadowMapSize": 512,
+    "shadowMode": "poisson",
+    "renderedFrames": 111,
+    "shadowRenderedFrames": 103,
+    "faces": ["neutral:false", "neutral:false", "neutral:false"],
+    "characterArtVersion": "chef-procedural-v1",
+    "sceneBuildMs": 229.90000009536743,
+    "sceneReadyMs": 5898.099999904633,
+    "characterSlots": [
+      ["hat", "hair", "apron"],
+      ["hat", "hair", "apron"],
+      ["hat", "hair", "apron"]
+    ],
+    "characterBindingsValid": true,
+    "frameMs": 129.09999990463257,
+    "frameMean": 417.94166621140073,
+    "frameP95": 1196.800048828125,
+    "frameP99": 1363.0999755859375,
+    "renderer": {
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "zoom": 0.96
+  }
+}

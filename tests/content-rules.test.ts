@@ -58,7 +58,12 @@ describe('campaign validation and special guests', () => {
       'impatient',
       'combo',
     ]);
-    expect(g.state.customers.find((c) => c.type === 'complex')?.recipe).toBe('toasted-burger');
+    const complexIndex = g.state.customers.findIndex((c) => c.type === 'complex');
+    const complexRecipe = g.state.customers[complexIndex]?.recipe;
+    expect(complexRecipe).not.toBe(g.state.customers[complexIndex - 1]?.recipe);
+    expect(recipes.find((r) => r.id === complexRecipe)?.steps.length).toBeGreaterThan(
+      recipes[0].steps.length,
+    );
     expect(recipes[1].steps.length).toBeGreaterThan(recipes[0].steps.length);
   });
   it('applies impatience, VIP score and combo bonus while preserving the plate', () => {

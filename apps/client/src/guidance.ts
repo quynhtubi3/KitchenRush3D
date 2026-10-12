@@ -1,5 +1,5 @@
 import type { Snapshot, Station } from '../../../packages/shared/src/types';
-import { recipeById } from '../../../packages/content/src/campaign';
+import { dishRecipe, recipeById } from '../../../packages/content/src/campaign';
 import { approach } from './tap-navigation';
 
 export type Guidance = {
@@ -11,11 +11,19 @@ export type Guidance = {
 export function guidance(state: Snapshot, chefId: string, tracked?: string): Guidance | null {
   const chef = state.chefs[chefId];
   const orders = state.customers.filter((c) => c.seat && c.state === 'WaitingForFood');
-  const customer = orders.find((c) => c.id === tracked) ?? orders[0];
-  if (!chef || !customer || state.phase !== 'playing' || state.countdown) return null;
-  const recipe = recipeById(customer.recipe);
   const assembly = state.stations.find((s) => s.kind === 'assembly');
-  const parts = assembly?.item?.parts ?? [];
+  const heldRecipe = chef?.item ? dishRecipe(chef.item.kind) : undefined;
+  const boundRecipe =
+    heldRecipe?.id ?? chef?.item?.assemblyRecipe ?? assembly?.item?.assemblyRecipe;
+  const boundOrder = boundRecipe ? orders.find((c) => c.recipe === boundRecipe) : undefined;
+  const customer = boundOrder ?? orders.find((c) => c.id === tracked) ?? orders[0];
+  if (!chef || !customer || state.phase !== 'playing' || state.countdown) return null;
+  if (heldRecipe && !boundOrder) return null;
+  const recipe = recipeById(boundRecipe ?? customer.recipe);
+  const parts =
+    heldRecipe?.components ??
+    (chef.item?.kind === 'plate' ? chef.item.parts : assembly?.item?.parts) ??
+    [];
   const missing = recipe.components.filter((k) => !parts.includes(k));
   const result = (station: Station | undefined, action: Guidance['action']): Guidance => ({
     customer: customer.id,

@@ -1,0 +1,16 @@
+{
+  "viewport": { "name": "landscape", "width": 844, "height": 390 },
+  "renderer": "Chromium SwiftShader, touch profile; not native hardware",
+  "meshes": 273,
+  "activeMeshes": 219,
+  "drawCalls": 345,
+  "drawCallsMean": 276.5431034482759,
+  "materials": 135,
+  "uniqueGeometries": 273,
+  "fps": 2,
+  "triangles": 114780,
+  "geometryBytesEstimated": 3765584,
+  "textureBytesEstimated": 7561386,
+  "shadowCasters": 127,
+  "quality": "standard"
+}

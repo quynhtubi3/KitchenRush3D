@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Kitchen Rush — Chaotic Pop Pass 3 evidence</title>
+    <style>
+      body {
+        margin: auto;
+        max-width: 1400px;
+        padding: 24px;
+        background: #25243a;
+        color: #fff9e9;
+        font:
+          16px/1.55 system-ui,
+          sans-serif;
+      }
+      a {
+        color: #ffc72c;
+      }
+      button,
+      select {
+        font: inherit;
+        padding: 8px 12px;
+        margin: 8px 8px 8px 0;
+      }
+      label {
+        display: inline-block;
+        margin-right: 16px;
+      }
+      .pair {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1440/1000;
+        background: #1a192b;
+        overflow: hidden;
+      }
+      .pair.mobile {
+        aspect-ratio: 390/844;
+        max-width: 460px;
+        margin: auto;
+      }
+      .pair img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      #after {
+        clip-path: inset(0 0 0 50%);
+      }
+      input {
+        width: 100%;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .gallery img {
+        width: 100%;
+        display: block;
+        background: #e8e7f0;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        padding: 8px 0;
+        color: #d8d4e4;
+      }
+      .study {
+        display: block;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chaotic Pop Pass 3</h1>
+    <p>
+      Real production-browser kitchen screenshots. Left: final Pass 2 build; right: Pass 3.
+      Balanced, Reduced Motion and the same first restaurant level. Portrait and landscape retain
+      their framing; the 1920×1080 touch profile changes camera framing to keep the station row
+      below the desktop HUD. Chromium SwiftShader is not iPhone/Safari evidence or a mobile GPU
+      benchmark.
+    </p>
+    <label
+      >Restaurant
+      <select id="restaurant">
+        <option value="little-sun">Little Sun</option>
+        <option value="tide">Tide</option>
+        <option value="olive">Olive</option>
+        <option value="lantern">Lantern</option>
+        <option value="orbit">Orbit</option>
+      </select></label
+    >
+    <label
+      >Camera
+      <select id="view">
+        <option value="desktop-1920">Desktop/touch overview 1920×1080</option>
+        <option value="portrait">390×844 touch overview</option>
+        <option value="portrait-follow">390×844 touch follow</option>
+        <option value="landscape">844×390 touch overview</option>
+        <option value="landscape-follow">844×390 touch follow</option>
+      </select></label
+    >
+    <div class="pair" id="pair">
+      <img id="before" alt="Before: live kitchen" /><img id="after" alt="After: live kitchen" />
+    </div>
+    <label style="display: block"
+      >Reveal after <input id="reveal" type="range" min="0" max="100" value="50"
+    /></label>
+    <p>
+      <a id="beforeLink">Open before at full size</a> ·
+      <a id="afterLink">Open after at full size</a>
+    </p>
+    <p>
+      Before is the final Pass 2 production build; after is Pass 3. Same first levels, viewport and
+      Reduced Motion. Live customer/timer states can differ; these are not exact replay frames.
+      Portrait/landscape views use touch profiles. At 1920×1080 the post-change camera uses the
+      wide-screen overview profile to avoid HUD occlusion; that pair is not a same-camera art
+      comparison. No native Safari or phone heat certification.
+    </p>
+    <h2>Actual runtime asset studies — offline, not gameplay proof</h2>
+    <p>
+      These inspection sheets use the same chef/customer/food functions as the live game. They do
+      not invent server snapshots or establish a cooking/multiplayer victory. Pass 2 face, customer
+      and food sheets are preserved as the baseline. The new full equipment sheet has no matching
+      pre-change full sheet; the live board close-ups show each venue's current surface treatment.
+    </p>
+    <a href="screenshots/chaotic-pop-pass3-after/faces-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass3-after/faces-asset-study.png"
+        alt="Eight actual 3D chef expressions"
+    /></a>
+    <a href="screenshots/chaotic-pop-pass3-after/customers-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass3-after/customers-asset-study.png"
+        alt="Four actual 3D customers"
+    /></a>
+    <a href="screenshots/chaotic-pop-pass3-after/food-asset-study.png"
+      ><img
+        class="study"
+        src="screenshots/chaotic-pop-pass3-after/food-asset-study.png"
+        alt="Twenty-five recipe outputs rendered as 3D assets"
+    /></a>
+    <h2>Station close-ups from actual gameplay</h2>
+    <div class="gallery" id="equipment"></div>
+    <h2>Runtime asset pairs — offline studies</h2>
+    <div class="gallery" id="assetPairs"></div>
+    <h2>Gameplay and mobile evidence</h2>
+    <div class="gallery" id="gameplay"></div>
+    <p>
+      <a href="CHAOTIC_POP_PASS3_IMPLEMENTATION.md">Tests, render cost and iPhone check</a> ·
+      <a href="CHAOTIC_POP_PASS3_AUDIT.md">Internal quality assessment and missing work</a> ·
+      <a href="CHARACTER_CREATOR_ART_HANDOFF.md">Character handoff</a>
+    </p>
+    <script>
+      const venues = ['little-sun', 'tide', 'olive', 'lantern', 'orbit'];
+      function update() {
+        const id = document.querySelector('#restaurant').value,
+          v = document.querySelector('#view').value;
+        for (const phase of ['before', 'after']) {
+          const src = `screenshots/chaotic-pop-pass3-${phase}/${id}-${v}.png`;
+          document.querySelector(`#${phase}`).src = src;
+          document.querySelector(`#${phase}Link`).href = src;
+        }
+        document.querySelector('#pair').classList.toggle('mobile', v.startsWith('portrait'));
+        document.querySelector('#pair').style.aspectRatio = v.includes('landscape')
+          ? '844/390'
+          : v === 'desktop-1920'
+            ? '1920/1080'
+            : '390/844';
+      }
+      document.querySelectorAll('select').forEach((el) => el.addEventListener('change', update));
+      document
+        .querySelector('#reveal')
+        .addEventListener(
+          'input',
+          (event) =>
+            (document.querySelector('#after').style.clipPath =
+              `inset(0 0 0 ${event.target.value}%)`),
+        );
+      function figure(container, file, label, phase = 'after') {
+        const f = document.createElement('figure'),
+          a = document.createElement('a'),
+          img = document.createElement('img'),
+          caption = document.createElement('figcaption');
+        a.href = `screenshots/chaotic-pop-pass3-${phase}/` + file;
+        img.src = a.href;
+        img.alt = label;
+        img.loading = 'lazy';
+        caption.textContent = label;
+        a.append(img);
+        f.append(a, caption);
+        document.querySelector(container).append(f);
+      }
+      venues.forEach((id) =>
+        figure(
+          '#equipment',
+          `${id}-equipment-closeup.png`,
+          `${id}: station close-up from gameplay`,
+        ),
+      );
+      for (const mode of ['faces', 'food', 'customers'])
+        for (const phase of ['before', 'after'])
+          figure('#assetPairs', `${mode}-asset-study.png`, `${mode}: ${phase}; offline kit`, phase);
+      for (const [file, label] of [
+        ['main-menu-1440x900.png', 'Main menu'],
+        ['small-portrait.png', '360×640 overview'],
+        ['mobile-landscape-follow.png', '844×390 follow'],
+        [
+          'mobile-retina-balanced.png',
+          '390×844 DPR 3, Balanced buffer scale 2; grounded table feet',
+        ],
+        ['little-sun-desktop-1920x1080-high.png', '1920×1080 High'],
+        ['held-burger-desktop.png', 'Server-confirmed carried burger'],
+        ['cooking-desktop.png', 'Cooking from real inputs'],
+        ['victory-desktop.png', 'Real Solo victory'],
+        ['defeat-desktop.png', 'Natural server-timed defeat'],
+        ['equipment-asset-study.png', 'Offline level-10 equipment kit; not gameplay'],
+      ])
+        figure('#gameplay', file, label);
+      update();
+    </script>
+  </body>
+</html>

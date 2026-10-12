@@ -50,9 +50,57 @@ describe('snapshot-confirmed tap navigation', () => {
     expect(game.state.chefs.a.item).toBeNull();
     expect(game.state.chefs.b.item?.id).toBe('prepared');
   });
+  it('keeps an ingredient placement queued when a teammate adds the plate en route', () => {
+    const game = new Game({ id: 'little-sun-03' });
+    game.addChef('a');
+    game.addChef('b', 1);
+    const assembly = game.station('assembly');
+    game.state.chefs.a.item = { id: 'chopped-greens', kind: 'choppedLettuce', parts: [] };
+    game.intent('a', { type: 'selectRecipe', recipe: 'sunshine-burger' });
+    const tap = new TapNavigation();
+    const move = tap.select(game.state, 'a', assembly.id, 0)!;
+    expect(move.type).toBe('move');
+    game.intent('a', move);
+
+    // A teammate's plate arrives while this chef is already walking to plating.
+    assembly.item = { id: 'teammate-plate', kind: 'plate', parts: [] };
+    for (let i = 0; i < 100; i++) game.tick(0.05);
+
+    const interaction = tap.receive(game.state, 'a', 5000);
+    expect(interaction).toEqual({ type: 'interact', station: assembly.id });
+    game.intent('a', interaction!);
+    expect(game.state.chefs.a.item).toBeNull();
+    expect(assembly.item?.parts).toContain('choppedLettuce');
+    expect(assembly.item?.assemblyRecipe).toBe('sunshine-burger');
+  });
 });
 
 describe('recipe guidance', () => {
+  it('guides the carried dish to its customer while a teammate builds another recipe', () => {
+    const game = new Game({ id: 'little-sun-10' });
+    game.addChef('a');
+    const customer = game.state.customers[0];
+    customer.recipe = 'sunshine-cheeseburger';
+    customer.seat = 'seat1';
+    customer.state = 'WaitingForFood';
+    game.state.customers.push({
+      ...customer,
+      id: 'second',
+      seat: 'seat2',
+      recipe: 'sunshine-burger',
+    });
+    game.state.chefs.a.item = { id: 'served-plate', kind: 'cheeseburger', parts: [] };
+    game.station('assembly').item = {
+      id: 'other-plate',
+      kind: 'plate',
+      parts: ['bun'],
+      assemblyRecipe: 'sunshine-burger',
+    };
+    expect(guidance(game.state, 'a', 'second')?.station).toBe('seat1');
+    expect(guidance(game.state, 'a', 'second')?.missing).toEqual([]);
+    customer.state = 'Eating';
+    expect(guidance(game.state, 'a', 'second')).toBeNull();
+  });
   it('compares one-tap arrival with explicit confirmation on the same first dish', () => {
     const totals: number[] = [];
     for (const automatic of [true, false]) {
